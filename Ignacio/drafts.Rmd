@@ -1,0 +1,131 @@
+---
+title: "Ignacio_draft"
+output: 
+  html_document:
+    keep_md: true
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set( message=F, warning=F, fig.width = 10, fig.height = 10 )
+library(dplyr)
+setwd("C:/Users/icps/Dropbox/3. Maxwell/4. Capston/Data-Capstone/ignacio")
+cnt <- read.csv("NYcontracts.csv", stringsAsFactors = F)
+#grn <- read.csv("NYgrants.csv", stringsAsFactors = F)
+```
+
+####Interesting Variables
+
+ * **dollarsobligated**                                : num  336828 645347 72898 648209 34164 ...
+ * baseandexercisedoptionsvalue                    : num  336828 645347 72898 648209 34164 ...
+ * baseandalloptionsvalue
+ * **maj_agency_cat**                                  : chr  "3600: Department of Veterans Affairs"
+ * maj_fund_agency_cat                             : chr  "3600: Department of Veterans Affairs"
+ * contractingofficeagencyid                       : chr  "3600: VETERANS AFFAIRS, DEPARTMENT OF"
+ * contractingofficeid                             : chr  "36C242: 242-NETWORK CONTRACT OFC 02(00242)"
+ * fundingrequestingagencyid                       : chr  "3600: VETERANS AFFAIRS, DEPARTMENT OF"
+ * fundingrequestingofficeid                       : chr  "36C242: 242-NETWORK CONTRACT OFC 02(00242)"
+ * signeddate                                      : chr  "10/1/2016" "10/1/2016" "10/1/2016" "10/1/2016" ...
+ * effectivedate                                   : chr  "10/1/2016" "10/1/2016" "10/1/2016" "10/1/2016" ...
+ * currentcompletiondate                           : chr  "9/30/2017" "9/30/2017" "9/30/2017" "9/30/2017" ...
+ * ultimatecompletiondate                          : chr  "9/30/2020" "9/30/2020" "9/30/2018" "9/30/2018" ...
+ * **contractactiontype**                              : chr  "C: DELIVERY ORDER"
+ * **descriptionofcontractrequirement**                : chr  "IGF::CT::IGF--THIS CONTRACT PROVIDES HVAC SERVICE FOR HUDSON VALLEY HEALTHCARE SYSTEM (MONTROSE CAMPUS)."
+ * progsourceagency                                : int  36 36 36 36 36 36 36 28 36 36 ...
+ * progsourceaccount                               : int  162 152 160 162 162 160
+ * **vendorname**                                     : chr  "EASTCO BUILDING SERVICES, INC."
+ * streetaddress                                   : chr  "130 BROOK AVE STE A"
+ * **city**                                            : chr  "DEER PARK" "NEW YORK"
+ * **state**                                           : chr  "NY" "NY" "NY" "NY" ...
+ * **zipcode**                                         : int  117297241 100012320
+ * vendorcountrycode                               : chr  "USA: UNITED STATES OF AMERICA"
+ * vendor_state_code                               : chr  "NY" "NY" "NY" "NY" ...
+ * vendor_cd                                       : int  2 10 25 14 12 10 16 12 12 15 ...
+ * congressionaldistrict                           : int  2 10 25 14 12 10 16 12 12 15
+ * **dunsnumber**                                      : int  605119932 18836440 793169512 830335969 79084053 
+ * parentdunsnumber                                : int  605119932 18836440
+ * **placeofperformancecity**                         : chr  "MONTROSE" "NEW YORK" "NORTHPORT" "JAMAICA" ...
+ * pop_state_code                                  : chr  "NY: New York"
+ * placeofperformancecountrycode                   : chr  "USA: UNITED STATES OF AMERICA"
+ * **placeofperformancezipcode**                       : int  105480001
+ * pop_cd                                          : chr  "NY17" "NY12" "NY03" "NY05" ...
+ * placeofperformancecongressionaldistrict         : chr  "NY17"
+ * **psc_cat**                                         : chr  "J" "R" "J" "V" ...
+ * **productorservicecode**                            : chr  "J041: MAINT/REPAIR/REBUILD OF EQUIPMENT- REFRIGERATION, AIR CONDITIONING, AND AIR CIRCULATING EQUIPMENT"
+ * **principalnaicscode**                              : int  541611 561421
+ * fiscal_year                                     : int  2017 2017
+
+
+####Useful links
+
+**List of other databases**
+https://www.fpds.gov/wiki/index.php/PSC,_NAICS_and_more
+
+**Sam** System for Award Management
+Allows to look at contractors by name, DUNS or CAGE (look at search records)
+https://www.sam.gov/portal/SAM
+
+####Glosary of some useful codes
+
+**NAICS** The North American Industry Classification System
+https://www.naics.com/search/
+https://www.naics.com/naics-drilldown-table/
+
+NAICS is one of the tools used by government agencies to classify the acquisitions and procurements conducted for goods, services and solutions.
+
+How NAICS are used.
+-agencies use NAICS Codes to classify how they will use goods and services they purchase.
+-companies use NAICS Codes to classify their offerings or the segment of an industry sector in which they do business.
+-agencies reference NAICS Codes in documents related to requirements such as forecasts, pre-solicitations and solicitations, and subsequent contracts and agreements.
+-companies reference NAICS Codes in their SAM profiles, Dynamic Small Business Search profiles (for small business concerns) and often on their marketing materials such as websites, business cards and capability statements.
+
+**PSC** Product or Service Code
+https://www.fpds.gov/downloads/psc_data_Oct012015.xls
+
+Product service codes (PSC) are used by the United States government to describe the products, services, and research and development purchased by the government. 
+They differ from NAICS Codes in that PSC Codes describe “WHAT” was bought for each contract action reported in the Federal Procurement Data System (FPDS),” whereas NAICS Codes describe “HOW” purchased products and services will be used. NAICS and PSC Codes look different, too. NAICS Codes are six position numeric values and PSC Codes are four position numeric or alphanumeric values.
+
+When compared to NAICS Codes, PSC Codes are much more granular. NAICS Codes are segregated into industry sectors represented by the first two digits of a NAICS Code such as ‘54 – Professional Scientific and Technical Services.’ The current NAICS Code system consists of twenty industry sectors. Product and Service Codes start with three categories, R&D, Services and Products, that are then broken down into 102 classes indicated by the first one or two digits of a PSC Code.
+
+**DUNS** Data Universal Numbering System
+http://fedgov.dnb.com/webform/displayHomePage.do;jsessionid=E1E507FBF0B6F36823D2519B2F4E5981
+
+D-U-N-S is a code used for identifying business entities on a location-specific basis. Assigned and maintained solely by D&B, this unique nine-digit identification number has been assigned to over 100 million businesses worldwide. 
+A D-U-N-S Number remains with the company location to which it has been assigned even if it closes or goes out-of-business.
+The D-U-N-S Number also "unlocks" a wealth of value-added data associated with that entity, including the business name, physical and mailing addresses, tradestyles ("doing business as"), principal names, financial, payment experiences,industry classifications (SICs and NAICS), socio-economic status,government data and more. The D-U-N-S® Number also links members of corporate family trees worldwide.
+
+The D-U-N-S® Number is widely used by both commercial and federal entities and was adopted as the standard business identifier for federal electronic commerce in October 1994.
+
+**CAGE** The Commercial and Government Entity Code
+It is a unique identifier assigned to suppliers to various government or defense agencies, as well as to government agencies themselves and also various organizations. CAGE codes provide a standardized method of identifying a given facility at a specific location.
+
+#####maj_agency_cat
+
+```{r}
+cat(unique(cnt$maj_agency_cat), sep="\n") #to print a list.
+```
+
+#####productorservicecode PSC
+```{r}
+cat(unique(cnt$productorservicecode), sep="\n") #to print a list.
+```
+
+#####principalnaicscode NAICS
+```{r}
+cat(unique(cnt$principalnaicscode), sep="\n") #to print a list.
+```
+
+#####dunsnumber DUNS
+```{r}
+cat(unique(cnt$dunsnumber), sep="\n") #to print a list.
+```
+
+#####vendorname
+```{r}
+cat(unique(cnt$vendorname), sep="\n") #to print a list.
+```
+
+#####contractactiontype
+```{r}
+cat(unique(cnt$contractactiontype), sep="\n") #to print a list.
+```
