@@ -1,9 +1,10 @@
 ---
-title: "Ignacio_draft"
+title: "Data exploration"
 output: 
   html_document:
     keep_md: true
     df_print: paged
+    code_fold: hide
 ---
 
 ```{r setup, include=FALSE}
@@ -14,7 +15,9 @@ cnt <- read.csv("NYcontracts.csv", stringsAsFactors = F)
 #grn <- read.csv("NYgrants.csv", stringsAsFactors = F)
 ```
 
-####Interesting Variables
+
+#Relevant Variables
+Those in **bold** seem the most useful... 
 
  * **dollarsobligated**                                : num  336828 645347 72898 648209 34164 ...
  * baseandexercisedoptionsvalue                    : num  336828 645347 72898 648209 34164 ...
@@ -56,18 +59,18 @@ cnt <- read.csv("NYcontracts.csv", stringsAsFactors = F)
  * fiscal_year                                     : int  2017 2017
 
 
-####Useful links
+#Useful links
 
-**List of other databases**
+* **List of other databases**
 https://www.fpds.gov/wiki/index.php/PSC,_NAICS_and_more
 
-**Sam** System for Award Management
+* **Sam** System for Award Management
 Allows to look at contractors by name, DUNS or CAGE (look at search records)
 https://www.sam.gov/portal/SAM
 
-####Glosary of some useful codes
+#Glosary of some useful codes
 
-**NAICS** The North American Industry Classification System
+* **NAICS** The North American Industry Classification System
 https://www.naics.com/search/
 https://www.naics.com/naics-drilldown-table/
 
@@ -79,7 +82,7 @@ How NAICS are used.
 -agencies reference NAICS Codes in documents related to requirements such as forecasts, pre-solicitations and solicitations, and subsequent contracts and agreements.
 -companies reference NAICS Codes in their SAM profiles, Dynamic Small Business Search profiles (for small business concerns) and often on their marketing materials such as websites, business cards and capability statements.
 
-**PSC** Product or Service Code
+* **PSC** Product or Service Code
 https://www.fpds.gov/downloads/psc_data_Oct012015.xls
 
 Product service codes (PSC) are used by the United States government to describe the products, services, and research and development purchased by the government. 
@@ -87,7 +90,7 @@ They differ from NAICS Codes in that PSC Codes describe “WHAT” was bought fo
 
 When compared to NAICS Codes, PSC Codes are much more granular. NAICS Codes are segregated into industry sectors represented by the first two digits of a NAICS Code such as ‘54 – Professional Scientific and Technical Services.’ The current NAICS Code system consists of twenty industry sectors. Product and Service Codes start with three categories, R&D, Services and Products, that are then broken down into 102 classes indicated by the first one or two digits of a PSC Code.
 
-**DUNS** Data Universal Numbering System
+* **DUNS** Data Universal Numbering System
 http://fedgov.dnb.com/webform/displayHomePage.do;jsessionid=E1E507FBF0B6F36823D2519B2F4E5981
 
 D-U-N-S is a code used for identifying business entities on a location-specific basis. Assigned and maintained solely by D&B, this unique nine-digit identification number has been assigned to over 100 million businesses worldwide. 
@@ -96,36 +99,103 @@ The D-U-N-S Number also "unlocks" a wealth of value-added data associated with t
 
 The D-U-N-S® Number is widely used by both commercial and federal entities and was adopted as the standard business identifier for federal electronic commerce in October 1994.
 
-**CAGE** The Commercial and Government Entity Code
+* **CAGE** The Commercial and Government Entity Code
 It is a unique identifier assigned to suppliers to various government or defense agencies, as well as to government agencies themselves and also various organizations. CAGE codes provide a standardized method of identifying a given facility at a specific location.
 
-#####maj_agency_cat
+#Peeking into some variables
+
+###maj_agency_cat
 
 ```{r}
-cat(unique(cnt$maj_agency_cat), sep="\n") #to print a list.
+cat(head(unique(cnt$maj_agency_cat)), sep="\n") #to print a list.
 ```
 
-#####productorservicecode PSC
+###productorservicecode PSC
 ```{r}
-cat(unique(cnt$productorservicecode), sep="\n") #to print a list.
+cat(head(unique(cnt$productorservicecode)), sep="\n") #to print a list.
 ```
 
-#####principalnaicscode NAICS
+###principalnaicscode NAICS
 ```{r}
-cat(unique(cnt$principalnaicscode), sep="\n") #to print a list.
+cat(head(unique(cnt$principalnaicscode)), sep="\n") #to print a list.
 ```
+*This code will bereplaced by the name of the category of the NAICS
 
-#####dunsnumber DUNS
+###dunsnumber DUNS
 ```{r}
-cat(unique(cnt$dunsnumber), sep="\n") #to print a list.
+cat(head(unique(cnt$dunsnumber)), sep="\n") #to print a list.
 ```
 
-#####vendorname
+###vendorname
 ```{r}
-cat(unique(cnt$vendorname), sep="\n") #to print a list.
+cat(head(unique(cnt$vendorname)), sep="\n") #to print a list.
 ```
 
-#####contractactiontype
+###contractactiontype
 ```{r}
 cat(unique(cnt$contractactiontype), sep="\n") #to print a list.
+```
+
+
+#Exploring some Descriptives of the data
+
+```{r}
+dat <- cnt[,c("dollarsobligated", "maj_agency_cat", "contractactiontype", "vendorname", "productorservicecode", "principalnaicscode")]
+```
+
+##Main Vendors
+```{r}
+#aggregating by main Vendors
+ven <- group_by(dat, vendorname)
+ven <- summarize(ven, Monies = sum(dollarsobligated))
+
+x <- ven$Monies < 0 
+ven$Monies[x] <- NA
+ven <- arrange(ven, desc(Monies))
+
+ven
+barplot(ven$Monies)
+
+```
+
+
+##Main PSC
+```{r}
+#aggregating by main PSC
+
+psc <- group_by(dat, productorservicecode)
+psc <- summarize(psc, Monies = sum(dollarsobligated))
+
+x <- psc$Monies < 0 
+psc$Monies[x] <- NA
+psc <- arrange(psc, desc(Monies))
+
+psc
+barplot(psc$Monies)
+
+```
+
+##Main NAICS
+```{r}
+#making naics code two digit
+nai <- dat
+nai$NAICS.code <- as.integer(substring(nai$principalnaicscode, 1,2))
+
+#adding the name variable
+naics <- read.csv("NAICS_cat.csv")
+x <- match(nai$NAICS.code, naics$X2017.NAICS.Code)
+nai$NAICS.name <- naics$X2017.NAICS.Title[x]
+
+#aggregating by main NAICS
+nai <- group_by(nai, NAICS.name)
+nai <- summarize(nai, Monies = sum(dollarsobligated))
+options(scipen=999)
+
+#eliminating negative sums
+x <- nai$Monies < 0 
+nai$Monies[x] <- NA
+nai <- arrange(nai, desc(Monies))
+
+nai
+barplot(nai$Monies)
 ```
