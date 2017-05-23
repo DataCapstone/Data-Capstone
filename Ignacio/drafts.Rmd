@@ -1,10 +1,10 @@
 ---
 title: "Data exploration"
-output: 
-  html_document:
-    keep_md: true
-    df_print: paged
-    code_fold: hide
+output: github_document
+html_document:
+  df_print: paged
+  keep_md: true
+  code_fold: hide
 ---
 
 ```{r setup, include=FALSE}
@@ -17,6 +17,7 @@ cnt <- read.csv("NYcontracts.csv", stringsAsFactors = F)
 
 
 #Relevant Variables
+
 Those in **bold** seem the most useful... 
 
  * **dollarsobligated**                                : num  336828 645347 72898 648209 34164 ...
