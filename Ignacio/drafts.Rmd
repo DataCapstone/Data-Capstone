@@ -1,5 +1,5 @@
 ---
-title: "Data exploration"
+title: "Contracts Data exploration"
 output: github_document
 html_document:
   df_print: paged
@@ -10,66 +10,48 @@ html_document:
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set( message=F, warning=F, fig.width = 10, fig.height = 10 )
 library(dplyr)
+library(pander)
 setwd("C:/Users/icps/Dropbox/3. Maxwell/4. Capston/Data-Capstone/ignacio")
 cnt <- read.csv("NYcontracts.csv", stringsAsFactors = F)
-#grn <- read.csv("NYgrants.csv", stringsAsFactors = F)
+
+#making naics code two digit
+cnt$NAICS.code <- as.integer(substring(cnt$principalnaicscode, 1,2))
+
+#adding the name variable
+naics <- read.csv("NAICS_cat.csv")
+x <- match(cnt$NAICS.code, naics$X2017.NAICS.Code)
+cnt$NAICS.name <- as.character(naics$X2017.NAICS.Title[x])
+
 ```
 
+```{r, eval=FALSE}
 
-#Relevant Variables
+#getting a dataframe with the class for each variable
+x <- cnt[1,]
+x <- as.data.frame(lapply(x, class))
+x <- as.data.frame(t(x))
+x <- data.frame(var = row.names(x), class = as.character(x$V1), stringsAsFactors = F)
+cntv <- x
+write.csv(cntv, "cnt.variables.csv", row.names = F)
 
-Those in **bold** seem the most useful... 
+```
 
- * **dollarsobligated**                                : num  336828 645347 72898 648209 34164 ...
- * baseandexercisedoptionsvalue                    : num  336828 645347 72898 648209 34164 ...
- * baseandalloptionsvalue
- * **maj_agency_cat**                                  : chr  "3600: Department of Veterans Affairs"
- * maj_fund_agency_cat                             : chr  "3600: Department of Veterans Affairs"
- * contractingofficeagencyid                       : chr  "3600: VETERANS AFFAIRS, DEPARTMENT OF"
- * contractingofficeid                             : chr  "36C242: 242-NETWORK CONTRACT OFC 02(00242)"
- * fundingrequestingagencyid                       : chr  "3600: VETERANS AFFAIRS, DEPARTMENT OF"
- * fundingrequestingofficeid                       : chr  "36C242: 242-NETWORK CONTRACT OFC 02(00242)"
- * signeddate                                      : chr  "10/1/2016" "10/1/2016" "10/1/2016" "10/1/2016" ...
- * effectivedate                                   : chr  "10/1/2016" "10/1/2016" "10/1/2016" "10/1/2016" ...
- * currentcompletiondate                           : chr  "9/30/2017" "9/30/2017" "9/30/2017" "9/30/2017" ...
- * ultimatecompletiondate                          : chr  "9/30/2020" "9/30/2020" "9/30/2018" "9/30/2018" ...
- * **contractactiontype**                              : chr  "C: DELIVERY ORDER"
- * **descriptionofcontractrequirement**                : chr  "IGF::CT::IGF--THIS CONTRACT PROVIDES HVAC SERVICE FOR HUDSON VALLEY HEALTHCARE SYSTEM (MONTROSE CAMPUS)."
- * progsourceagency                                : int  36 36 36 36 36 36 36 28 36 36 ...
- * progsourceaccount                               : int  162 152 160 162 162 160
- * **vendorname**                                     : chr  "EASTCO BUILDING SERVICES, INC."
- * streetaddress                                   : chr  "130 BROOK AVE STE A"
- * **city**                                            : chr  "DEER PARK" "NEW YORK"
- * **state**                                           : chr  "NY" "NY" "NY" "NY" ...
- * **zipcode**                                         : int  117297241 100012320
- * vendorcountrycode                               : chr  "USA: UNITED STATES OF AMERICA"
- * vendor_state_code                               : chr  "NY" "NY" "NY" "NY" ...
- * vendor_cd                                       : int  2 10 25 14 12 10 16 12 12 15 ...
- * congressionaldistrict                           : int  2 10 25 14 12 10 16 12 12 15
- * **dunsnumber**                                      : int  605119932 18836440 793169512 830335969 79084053 
- * parentdunsnumber                                : int  605119932 18836440
- * **placeofperformancecity**                         : chr  "MONTROSE" "NEW YORK" "NORTHPORT" "JAMAICA" ...
- * pop_state_code                                  : chr  "NY: New York"
- * placeofperformancecountrycode                   : chr  "USA: UNITED STATES OF AMERICA"
- * **placeofperformancezipcode**                       : int  105480001
- * pop_cd                                          : chr  "NY17" "NY12" "NY03" "NY05" ...
- * placeofperformancecongressionaldistrict         : chr  "NY17"
- * **psc_cat**                                         : chr  "J" "R" "J" "V" ...
- * **productorservicecode**                            : chr  "J041: MAINT/REPAIR/REBUILD OF EQUIPMENT- REFRIGERATION, AIR CONDITIONING, AND AIR CIRCULATING EQUIPMENT"
- * **principalnaicscode**                              : int  541611 561421
- * fiscal_year                                     : int  2017 2017
-
-
-#Useful links
+#Useful links for context
 
 * **List of other databases**
 https://www.fpds.gov/wiki/index.php/PSC,_NAICS_and_more
 
-* **Sam** System for Award Management
+* **System for Award Management (SAM)**
 Allows to look at contractors by name, DUNS or CAGE (look at search records)
 https://www.sam.gov/portal/SAM
 
-#Glosary of some useful codes
+* **Federal Acquisition Regulation (FAR)**
+https://www.acquisition.gov/?q=browsefar
+FAR contains the uniform policies and procedures for acquisitions by executive agencies of the federal government. The FAR is issued and maintained by the Department of Defense, the General Services Administration, and the National Aeronautics and Space Administration.
+***
+
+
+#Glosary of useful codes
 
 * **NAICS** The North American Industry Classification System
 https://www.naics.com/search/
@@ -83,13 +65,75 @@ How NAICS are used.
 -agencies reference NAICS Codes in documents related to requirements such as forecasts, pre-solicitations and solicitations, and subsequent contracts and agreements.
 -companies reference NAICS Codes in their SAM profiles, Dynamic Small Business Search profiles (for small business concerns) and often on their marketing materials such as websites, business cards and capability statements.
 
+Higher level NAICS categories:
+```{r}
+naics %>% pander
+```
+
+
 * **PSC** Product or Service Code
 https://www.fpds.gov/downloads/psc_data_Oct012015.xls
 
 Product service codes (PSC) are used by the United States government to describe the products, services, and research and development purchased by the government. 
-They differ from NAICS Codes in that PSC Codes describe “WHAT” was bought for each contract action reported in the Federal Procurement Data System (FPDS),” whereas NAICS Codes describe “HOW” purchased products and services will be used. NAICS and PSC Codes look different, too. NAICS Codes are six position numeric values and PSC Codes are four position numeric or alphanumeric values.
 
-When compared to NAICS Codes, PSC Codes are much more granular. NAICS Codes are segregated into industry sectors represented by the first two digits of a NAICS Code such as ‘54 – Professional Scientific and Technical Services.’ The current NAICS Code system consists of twenty industry sectors. Product and Service Codes start with three categories, R&D, Services and Products, that are then broken down into 102 classes indicated by the first one or two digits of a PSC Code.
+They differ from NAICS Codes in that PSC Codes describe WHAT was bought for each contract action reported in the Federal Procurement Data System (FPDS), whereas NAICS Codes describe HOW purchased products and services will be used. NAICS and PSC Codes look different, too. NAICS Codes are six position numeric values and PSC Codes are four position numeric or alphanumeric values.
+
+When compared to NAICS Codes, PSC Codes are much more granular. NAICS Codes are segregated into industry sectors represented by the first two digits of a NAICS Code such as 54 Professional Scientific and Technical Services.The current NAICS Code system consists of twenty industry sectors. Product and Service Codes start with three categories, R&D, Services and Products, that are then broken down into 102 classes indicated by the first one or two digits of a PSC Code.
+
+PSC codes can be descripbed in three groups:
+
+**a) Research and Development (R&D)**
+
+Starts with an A, then a second letter and numbers
+
+ECONOMIC GROWTH AND PRODUCTIVITY R&D (AE)
+AE1_ Employment Growth and Productivity
+AE2_ Product or Service Improvement
+AE3_ Manufacturing Technology
+AE9_ Other Economic Growth and Productivity
+
+
+**b) Service codes**
+
+Starts from B to Z
+
+e.g.:
+MEDICAL SERVICES (Q)
+Q101 Dependent Medicare Services
+Q201 General Health Care Services
+Q301 Laboratory Testing Services
+Q401 Nursing Services
+
+When leasing or buying property: MULTIPLE USE CODES FOR BUILDINGS AND FACILITIES
+Use the three digit identifiers shown below preceded by the appropriate Category Letter "E" for
+purchase of Structure and Facilities; "M" for Operation of Government-Owned Facilities; "X" for
+Lease or Rental of Facilities; "Y" for Construction of Structures and Facilities; or "Z" for
+Maintenance, Repair or Alteration of Real Property.
+
+
+**c) Supplies and equipment codes** 
+
+This Part lists supplies and equipment codes of the Federal Supply Classification (FSC) which were
+developed for use in classifying items of supply identified under the Federal Cataloging Program.
+
+The FSC is a commodity classification designed to serve the functions of supply and is
+sufficiently comprehensive in scope to permit the classification of all items of personal
+property. In order to accomplish this, groups and classes have been established for the
+universe of commodities, with emphasis on the items known to be in the supply systems of the
+Federal Government.
+
+The structure of the FSC, as presently established, consists of 78 groups, which are
+subdivided into 685 classes. Each class covers a relatively homogeneous area of
+commodities, in respect to their physical or performance characteristics, or in the respect that
+the items included therein are such as are usually requisitioned or issued together, or
+constitute a related grouping for supply management purpose.
+
+e.g.:
+
+83 TEXITLES, LEATHER, FURS, APPAREL AND SHOE FINDINGS, TENTS AND
+FLAGS
+  8305 Textile Fabrics
+  8310 Yarn and Thread
 
 * **DUNS** Data Universal Numbering System
 http://fedgov.dnb.com/webform/displayHomePage.do;jsessionid=E1E507FBF0B6F36823D2519B2F4E5981
@@ -103,28 +147,168 @@ The D-U-N-S® Number is widely used by both commercial and federal entities and 
 * **CAGE** The Commercial and Government Entity Code
 It is a unique identifier assigned to suppliers to various government or defense agencies, as well as to government agencies themselves and also various organizations. CAGE codes provide a standardized method of identifying a given facility at a specific location.
 
+***
+
+
+#Relevant Variables for analysis
+
+I have included some variables I find interesting and divided them in categories four broad caterories that will be useful for analysis: 1. Contracting agency/office; 2. Contract details; 3. Vendor/Contractor details; 4. Product or service type 
+
+Those in **bold** seem the most useful to me... 
+
+**1. CONTRACTING AGENCY/OFFICE** 
+
+ * **maj_agency_cat**                                  : chr  "3600: Department of Veterans Affairs"
+ * contractingofficeagencyid
+ * contractingofficeid
+ * agencyid
+ * contractingofficeagencyid
+ * contractingofficeid
+ * contractingofficerbusinesssizedetermination
+
+
+**2. CONTRACT DETAILS**
+
+ * piid	              :  character	1	The unique identifier for each contract, agreement or order. 
+ * **dollarsobligated**                                : num  336828 645347 72898 648209 34164 ...
+ * **contractactiontype**                              : chr  "C: DELIVERY ORDER"
+ * typeofcontractpricing                           : chr  "J: FIRM FIXED PRICE" "J: FIRM FIXED PRICE"
+ * contractfinancing
+ * multiyearcontract                               : chr  "" "N: NO" "Y: YES" "N: NO"
+ * **competitiveprocedures**
+ * multipleorsingleawardidc                    : Indicates whether the contract is one of many that resulted from a single solicitation
+ * multiyearcontract                       : Indicates whether this is a multi-year contract, a contract for the purchase of supplies or services for more than 1, but not more than 5, program years. Such contracts are issued under specific congressional
+ 
+ * contingencyhumanitarianpeacekeepingoperation
+ * currentcompletiondate
+
+
+**Place of performance of Contract**
+
+ * **placeofperformancecity**                         : chr  "MONTROSE" "NEW YORK" "NORTHPORT" "JAMAICA" ...
+ * **pop_state_code**                               : chr  "NY: New York"
+ * placeofperformancecountrycode                   : chr  "USA: UNITED STATES OF AMERICA"
+ * **placeofperformancezipcode**                       : int  105480001
+ * pop_cd                                          : chr  "NY17" "NY12" "NY03" "NY05" ...
+ * placeofperformancecongressionaldistrict         : chr  "NY17"
+ * **psc_cat**                                         : chr  "J" "R" "J" "V" ...
+ * locationcode                                   : for the place of Performance
+
+
+**3. VENDOR/CONTRACTOR DETAILS**
+
+**category**
+
+ * NAICS.code
+ * NAICS.name
+ * **principalnaicscode**                              : int  541611 561421
+
+**id**
+
+ * **vendorname**                                     : chr  "EASTCO BUILDING SERVICES, INC."
+ * **dunsnumber**                                      : int  605119932 18836440 793169512 830335969 79084053 
+ * parentdunsnumber                                : int  605119932 18836440
+ * mod_parent                : The parent company for the vendor, as provided by D&B.
+
+**descriptives** 
+
+ * annualrevenue
+ * numberofemployees
+ * numberofoffersreceived
+ * organizationaltype
+ * receivescontracts
+ * receivescontractsandgrants
+ * receivesgrants
+
+**Location**
+
+ * state
+ * statecode
+ * city
+ * streetaddress
+ * zipcode : of contractor address
+
+**Business flags**
+
+ * isconstructionfirm
+ * ismanufacturerofgoods
+ 
+ * emergingsmallbusinessflag
+ * issbacertifiedsmalldisadvantagedbusiness : small business certified as disadvant...
+ * isdotcertifieddisadvantagedbusinessenterprise : Indicates whether the vendor is DoT Certified Disadvantaged Business Enterprise
+ * iscommunitydevelopedcorporationownedfirm
+ * iscommunitydevelopmentcorporation
+
+ * iscorporateentitynottaxexempt
+ * iscorporateentitytaxexempt
+ * isforprofitorganization
+
+**Service flags**
+
+ * hospitalflag
+ * educationalinstitutionflag
+ * isprivateuniversityorcollege
+ * isstatecontrolledinstitutionofhigherlearning
+
+**NonProfits flags**
+
+ * isfoundation
+ * isothernotforprofitorganization
+ * nonprofitorganizationflag
+ 
+**Government flags**
+
+ * isschooldistrictlocalgovernment
+ * ismunicipalitylocalgovernment
+ * iscitylocalgovernment
+ * iscouncilofgovernments
+ * iscountylocalgovernment
+ * isintermunicipallocalgovernment
+ * islocalgovernmentowned
+ * istownshiplocalgovernment
+ * localgovernmentflag
+ 
+ * isinterstateentity
+ * isportauthority
+ * stategovernmentflag
+ 
+ * federalgovernmentflag
+ * isfederalgovernmentagency
+ * isfederallyfundedresearchanddevelopmentcorp
+
+**Other Flags**
+
+ * isforeigngovernment
+ * isforeignownedandlocated
+ * isinternationalorganization
+ * isotherbusinessororganization
+ 
+
+**4. PRODUCT or SERVICE TYPE**
+
+ * **productorservicecode**              : chr  "J041: MAINT/REPAIR/REBUILD OF EQUIPMENT..."
+ * **psc_cat**               : The major category that the Federal Procurement Data System Product or Service Code
+
+***
+
+
 #Peeking into some variables
 
 ###maj_agency_cat
-
 ```{r}
 cat(head(unique(cnt$maj_agency_cat)), sep="\n") #to print a list.
 ```
 
-###productorservicecode PSC
+###productorservicecode
+This is the PSC code in string
 ```{r}
 cat(head(unique(cnt$productorservicecode)), sep="\n") #to print a list.
 ```
 
-###principalnaicscode NAICS
+###principalnaicscode
+This is the NAICS code in string
 ```{r}
-cat(head(unique(cnt$principalnaicscode)), sep="\n") #to print a list.
-```
-*This code will bereplaced by the name of the category of the NAICS
-
-###dunsnumber DUNS
-```{r}
-cat(head(unique(cnt$dunsnumber)), sep="\n") #to print a list.
+cat(head(unique(cnt$NAICS.name)), sep="\n") #to print a list.
 ```
 
 ###vendorname
@@ -137,66 +321,103 @@ cat(head(unique(cnt$vendorname)), sep="\n") #to print a list.
 cat(unique(cnt$contractactiontype), sep="\n") #to print a list.
 ```
 
+***
+
 
 #Exploring some Descriptives of the data
 
 ```{r}
-dat <- cnt[,c("dollarsobligated", "maj_agency_cat", "contractactiontype", "vendorname", "productorservicecode", "principalnaicscode")]
+dat <- cnt[,c("dollarsobligated", "maj_agency_cat", "contractactiontype", "vendorname", "productorservicecode", "NAICS.name")]
+
 ```
 
 ##Main Vendors
 ```{r}
 #aggregating by main Vendors
 ven <- group_by(dat, vendorname)
-ven <- summarize(ven, Monies = sum(dollarsobligated))
+ven <- summarize(ven, Monies = sum(dollarsobligated), Freq = n())
 
 x <- ven$Monies < 0 
-ven$Monies[x] <- NA
+ven$Monies[x] <- 0
 ven <- arrange(ven, desc(Monies))
 
-ven
+paste("There are", nrow(ven), "vendors")
+
+head(ven) %>% pander
 barplot(ven$Monies)
 
 ```
-
 
 ##Main PSC
 ```{r}
 #aggregating by main PSC
 
 psc <- group_by(dat, productorservicecode)
-psc <- summarize(psc, Monies = sum(dollarsobligated))
+psc <- summarize(psc, Monies = sum(dollarsobligated), Freq = n())
 
 x <- psc$Monies < 0 
-psc$Monies[x] <- NA
+psc$Monies[x] <- 0
 psc <- arrange(psc, desc(Monies))
 
-psc
+paste("There are", nrow(psc), "PSCs")
+
+head(psc) %>% pander
 barplot(psc$Monies)
 
 ```
 
 ##Main NAICS
 ```{r}
-#making naics code two digit
-nai <- dat
-nai$NAICS.code <- as.integer(substring(nai$principalnaicscode, 1,2))
-
-#adding the name variable
-naics <- read.csv("NAICS_cat.csv")
-x <- match(nai$NAICS.code, naics$X2017.NAICS.Code)
-nai$NAICS.name <- naics$X2017.NAICS.Title[x]
-
 #aggregating by main NAICS
-nai <- group_by(nai, NAICS.name)
-nai <- summarize(nai, Monies = sum(dollarsobligated))
+nai <- group_by(dat, NAICS.name)
+nai <- summarize(nai, Monies = sum(dollarsobligated), Freq = n())
 options(scipen=999)
 
 #eliminating negative sums
 x <- nai$Monies < 0 
-nai$Monies[x] <- NA
-nai <- arrange(nai, desc(Monies))
+nai$Monies[x] <- 0
 
-nai
-barplot(nai$Monies)
+nai <- arrange(nai, desc(Monies))
+nai <- nai[-which(is.na(nai$NAICS.name)),] #deleting the NA Row
+
+paste("There are", nrow(nai), "PSCs")
+
+head(nai) %>% pander
+par(mar = c(6,6,3,3))
+barplot(nai$Monies/100000, names.arg = nai$NAICS.name, las = 2, cex.names = .7, cex.axis = .7 , ylab = "USD 100,000", cex.lab = .8)
 ```
+
+
+I want to look further into the following NAICS:
+
+* Manufacturing
+* Professional, Scientific, and Technical Services
+* Health Care and Social Assistance
+* Construction
+* Educational Services
+
+```{r}
+#subsetting Manufacturing NAICS
+x <- cnt$NAICS.name == "Manufacturing"
+man <- cnt[x, c("dollarsobligated", "maj_agency_cat", "contractactiontype", "vendorname", "productorservicecode", "NAICS.name")]
+
+x <- is.na(man$dollarsobligated)
+sum(man$dollarsobligated[!x], na.rm = T)
+length(man$dollarsobligated[!x])
+```
+
+```{r}
+
+x <- cnt$vendorname == "POLYMEDCO CANCER DIAGNOSTIC PRODUCTS LLC"
+pol <- cnt[x, c("maj_agency_cat", "dollarsobligated", "contractactiontype", "vendorname", "dunsnumber", "NAICS.name", "productorservicecode")]
+
+unique(pol$productorservicecode)
+
+length(unique(cnt$vendorname))
+length(unique(cnt$vendorname))
+
+str(cnt)
+```
+
+
+
