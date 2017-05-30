@@ -207,5 +207,127 @@ map <- leaflet( chicago_awards_geocode ) %>% # load data frame into leaflet map 
 # View Map
 map
 
+### 1 hour to do the following
+### Obtain data where the place of performance of the award takes place in
+### Chicago, IL, Philadelphia, PA, and Houston, TX
+### And we only care about Project Grants, Direct Loan, and Block Grant
+### Let's do it!
+
+awards_specific_type_description_city <- function( Type_Description1
+                                                   , CITY_NAME1 ) {
+  
+  # Create empty list
+  pages <- list()
+  # Create initial API url
+  url <- modify_url("https://api.usaspending.gov"
+                    , path = "/api/v1/awards/"
+                    , query = list(type_description = Type_Description1
+                                   , place_of_performance__city_name = CITY_NAME1
+                                   , page = 1
+                                   , limit = 400
+                    )
+  )
+  # Get API url
+  raw.resp <- GET(url)
+  if (http_type(raw.resp) != "application/json") {
+    stop("API did not return json. Check 'status code = 200'"
+         , call. = FALSE)
+  }
+  this.char.resp <- rawToChar( raw.resp$content) # convert from raw to char
+  # convert JSON object into R object
+  this.clean.resp <- fromJSON(this.char.resp
+                              , flatten = TRUE
+  ) 
+  # identify a boolean operator
+  # data_api$page_metadata$has_next_page = TRUE
+  this.clean.resp$page_metadata$has_next_page = TRUE
+  # while loop to grab and store data as long as the variable
+  # this.clean.resp$page_metadata$has_next_page == TRUE
+  
+  # Set initial page number
+  page_number <- 1
+  
+  # while loop with boolean condition
+  while( this.clean.resp$page_metadata$has_next_page == TRUE ) {
+    # identify current page url
+    current.page.url <- this.clean.resp$page_metadata$current
+    # subsitute "&page=XX" with "&page='page_number'"
+    next.page.url <- gsub( pattern = "&page=[[:digit:]]+"
+                           , replacement = paste0( "&page=", page_number)
+                           , x = current.page.url
+    )
+    # Get new API url
+    raw.resp <- GET( url = next.page.url )
+    # Convert raw vector to character vector
+    this.char.resp <- rawToChar( raw.resp$content )
+    # Convert JSON object into R object
+    this.clean.resp <- fromJSON( this.char.resp
+                                 , flatten = TRUE
+    )
+    # For every page number (1, 2, 3...), insert that page's "results" inside the list
+    pages[[ page_number ]] <- this.clean.resp$results
+    # Add to the page number and restart the loop
+    page_number <- page_number + 1
+  }
+  # once all the pages have been collected,
+  data_api_data <- rbind.pages(pages)
+  # return what we've collected
+  return( data_api_data )
+  
+  
+  # Turn API errors into R errors
+  if (http_error( raw.resp )) {
+    stop(
+      sprintf(
+        "USASpending.gov API request failed [%s]\n%s\n<%s>", 
+        status_code( raw.resp),
+        this.clean.resp$message,
+        this.clean.resp$documentation_url
+      ),
+      call. = FALSE
+    )
+  }
+  # add some structure stuff 
+  structure(
+    list(
+      content = this.clean.resp
+      , path = "/api/v1/awards/"
+      , response = raw.resp
+    )
+    , class = "usa_spending_api"
+  )
+} # end of function
+# Trying new awards_specific_type_description_cities function
+### REMINDER!
+### Obtain data where the place of performance of the award takes place in
+### Chicago, IL, Philadelphia, PA, and Houston, TX
+### And we only care about Project Grants, Direct Loan, and Block Grant
+### Let's do it!
+#
+# Chicago took 8 seconds
+chicago_project_grants <- awards_specific_type_description_city("Project Grant"
+                                                                , "CHICAGO" 
+                                                                )
+dim( chicago_project_grants ) # 626 rows by 65 variables
+# Try it for Houston...took 8 seconds
+houston_project_grants <- awards_specific_type_description_city( "Project Grant"
+                                                                 , "HOUSTON"
+                                                                 )
+dim( houston_project_grants ) # 347 rows by 65 variables
+# Try it for Philadelphia...took 8 seconds
+philly_project_grants <- awards_specific_type_description_city("Project Grant"
+                                                               , "PHILADELPHIA"
+                                                               )
+dim( philly_project_grants ) # 635 rows by 65 variables
 
 
+### Add rows to make larger data frame
+chi_hou_philly_project_grants <- rbind.data.frame( chicago_project_grants
+                                                   , houston_project_grants
+                                                   , philly_project_grants
+                                                   )
+dim( chi_hou_philly_project_grants ) # 1608 rows by 65 variables
+# Export as RDS
+saveRDS( chi_hou_philly_project_grants
+         , file = "/Users/cristiannuno/Desktop/Syracuse/MPA_Portfolio/DATA_ACT/data_export/chi_hou_philly_projectgrants_fy17.rds"
+         )
