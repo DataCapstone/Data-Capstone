@@ -33,7 +33,8 @@ rds_url <- "https://github.com/DataCapstone/Data-Capstone/blob/master/Drafts/ceu
 
 Nest the character vector into the following functions: 
 
-```rds.df <- readRDS( gzcon(url( rds_url ) ) )
+```
+rds.df <- readRDS( gzcon(url( rds_url ) ) )
 ```
 
 ### Step 7: Congratulations!
