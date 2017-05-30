@@ -1,3 +1,3 @@
-# Communicating with Contract-relevant Endpoints
+# Communicating with Transactions endpoint
 
-Hopefully this works!
+See USA spending API "Transactions" endpoint[https://api.usaspending.gov/api/v1/transactions/]
