@@ -1,0 +1,6 @@
+"","field.choices","type","description"
+"1","id","Integer","Internal primary key. Guaranteed to be unique."
+"2","term","String","The word or phrase in question"
+"3","data_act_term","String","The word or phrase as cited in the DATA Act Schema"
+"4","plain","String","A plain-language definition"
+"5","official","String","Definition from the DATA Act Schema"

@@ -1,0 +1,6 @@
+"","field.choices","type","description"
+"1","office_agency_id","Integer","Internal primary key. Guaranteed to be unique."
+"2","create_date","Datetime",""
+"3","update_date","Datetime",""
+"4","aac_code","String",""
+"5","name","String",""

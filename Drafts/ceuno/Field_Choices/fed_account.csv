@@ -1,0 +1,5 @@
+"","field.choices","type","description"
+"1","id","Integer","Internal primary key. Guaranteed to be unique."
+"2","agency_identifier","String",""
+"3","main_account_code","String",""
+"4","account_title","String",""
