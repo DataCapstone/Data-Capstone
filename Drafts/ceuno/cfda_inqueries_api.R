@@ -9,6 +9,21 @@
 # Example URL: https://api.usaspending.gov/api/v1/references/cfda/
 # Summary:     Returns information about CFDA programs
 #
+require(compiler)
+# compilePKGS()
+setCompilerOptions(suppressAll = TRUE )
+# enableJIT enables or disables just-in-time (JIT) compilation. 
+# JIT is disabled if the argument is 0. 
+# If level is 1 then larger closures are compiled before their first use. 
+# If level is 2, then some small closures are also compiled before their second use. 
+# If level is 3 then in addition all top level loops are compiled before they are executed.
+enableJIT(3) # 0 
+
+# load necessary packages
+library( httr )
+library( jsonlite )
+
+# Create function
 endpoint_df_extraction <- function( path ) {
   # Create empty list
   pages <- list()
@@ -97,5 +112,3 @@ View(cfda_program_info)
 saveRDS( cfda_program_info
          , file = "/Users/cristiannuno/Desktop/Syracuse/MPA_Portfolio/DATA_ACT/data_export/cfda_program_info.rds"
          )
-
-
