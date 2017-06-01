@@ -11,7 +11,7 @@ html_document:
 knitr::opts_chunk$set( message=F, warning=F, fig.width = 10, fig.height = 10 )
 library(dplyr)
 library(pander)
-setwd("C:/Users/icps/Dropbox/3. Maxwell/4. Capston/Data-Capstone/ignacio")
+setwd("C:/Users/icps/Dropbox/3. Maxwell/4. Capston")
 cnt <- read.csv("./Data/NYcon2017.csv", stringsAsFactors = F)
 
 cnt$transaction_status
@@ -23,6 +23,7 @@ cnt$NAICS.code <- as.integer(substring(cnt$principalnaicscode, 1,2))
 naics <- read.csv("NAICS_cat.csv")
 x <- match(cnt$NAICS.code, naics$X2017.NAICS.Code)
 cnt$NAICS.name <- as.character(naics$X2017.NAICS.Title[x])
+setwd("C:/Users/icps/Dropbox/3. Maxwell/4. Capston/Data-Capstone/ignacio")
 
 ```
 

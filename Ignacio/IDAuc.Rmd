@@ -11,7 +11,7 @@ html_document:
 knitr::opts_chunk$set( message=F, warning=F, fig.width = 10, fig.height = 10 )
 library(dplyr)
 library(pander)
-setwd("C:/Users/icps/Dropbox/3. Maxwell/4. Capston/Data-Capstone/ignacio")
+setwd("C:/Users/icps/Dropbox/3. Maxwell/4. Capston")
 
 #Two DF manually downloaded from usapspending.gov
 
@@ -30,48 +30,71 @@ gra16 <- read.csv("./Data/NYgra2016.csv", stringsAsFactors = F)
 gra15 <- read.csv("./Data/NYgra2015.csv", stringsAsFactors = F)
 gra14 <- read.csv("./Data/NYgra2014.csv", stringsAsFactors = F)
 
+setwd("C:/Users/icps/Dropbox/3. Maxwell/4. Capston/Data-Capstone/ignacio")
+
 ```
 
 
 #Use case
 
-**Position**: Howard Zemsky president and CEO of Empire State Development
-**Organization**: Empire State Development
-**Location**: NY
-**Sector**: Local Government (State)
-**Interest/question**: Wants to know which cities in their state are missing out on potential funds that they could apply for and needs a breakdown of per capita federal spending in each city to assess areas of need.
+* **Position**: Howard Zemsky president and CEO of Empire State Development
+* **Organization**: Empire State Development
+* **Location**: NY
+* **Sector**: Local Government (State)
+* **Interest/question**: Wants to know which cities in their state are missing out on potential funds that they could apply for and needs a breakdown of per capita federal spending in each city to assess areas of need.
  
+In what follows I will elaborate comparisons between Rochester and Syracuse
  
- 
-#Descriptives for Syracuse
+#Main Recipients of Fed $
+
+##Syracuse
 ```{r}
-#Subsetting Syracuse
+#Subsetting sry16
 x <- gra16$recipient_city_name %in% c("Syracuse", "SYRACUSE")
 
-syr16 <- gra16[x,c("maj_agency_cat",
+syr16 <- gra16[x,c("maj_agency_cat", "agency_name", "action_type",
                "cfda_program_num", "cfda_program_title", "fed_funding_amount", "non_fed_funding_amount",
                "total_funding_amount",	"asst_cat_type", "assistance_type", "record_type",
                "fiscal_year", "principal_place_cc", "project_description", "recipient_name", 
                "recipient_type", "recip_cat_type", "recipient_city_name", "recipient_county_name",
                "recipient_state_code", "exec1_fullname", "exec1_amount")]
 
+#exploring
+
+#what type of assistances are they getting?
+#unique(syr16$asst_cat_type)
+#[1] "G"
+
+#unique(syr16$assistance_type)
+#[1] "04: Project grant"         "03: Formula grant"         "05: Cooperative agreement"
+
+#ass <- group_by(syr16, assistance_type)
+#ass <- arrange(as.data.frame(summarize(ass, Freq = n())), desc(Freq))
+#            assistance_type Freq
+#1         04: Project grant  208
+#2 05: Cooperative agreement   34
+#3         03: Formula grant    4
+
+#action_type: The type of action for the record: whether it is a new assistance action, a continuation, a revision, or a funding adjustment.
+
+unique(syr16$action_type) #character type
+
 #Only interested in pure Federal grants
 x <- syr16$non_fed_funding_amount == 0
 syr16 <- syr16[x,]
 
-#what type of assistances are they getting?
-unique(syr16$asst_cat_type)
-unique(syr16$assistance_type)
-
-ass <- group_by(syr16, assistance_type)
-ass <- arrange(as.data.frame(summarize(ass, Freq = n())), desc(Freq))
-
 #only interested in project grants
-
 x <- syr16$assistance_type == "04: Project grant"
 syr16 <- syr16[x,]
 
-#Main recipients
+#should we also be interested in only one particular action? 
+#I will agregate all types because if something adds or reduces its better to have it all summed up.
+
+```
+
+###Main Recipients
+```{r}
+#Main recipients at syr
 options(scipen = 999)
 rec <- group_by(syr16, recipient_name)
 rec <- arrange(as.data.frame(summarize(rec, Fed = sum(fed_funding_amount), Freq = n())), desc(Fed))
@@ -81,28 +104,29 @@ x <- rec$Fed < 0
 rec$Fed[x] <- 0
 rec <- arrange(rec, desc(Fed))
 
-#pie chart only 5 mayor recipients
+#printing head
+head(rec) %>% pander
 
-pie <- rec[1:7,]
+#barplot
+par(mar = c(7,6,3,3), mfrow=c(1,1))
+barplot(rec$Fed/1000000, names.arg = rec$recipient_name, las = 2, cex.names = .7, cex.axis = .7 , ylab = "in USD 1MLL", cex.lab = .8)
 
-pie[8,] <- c("OTHERS", sum(rec$Fed[8:length(rec$Fed)]), sum(rec$Freq[8:length(rec$Fed)])) 
-
+#creating an object for a pie charts for the 5 mayor recipients
+pie <- rec[1:5,]
+pie[6,] <- c("OTHERS", sum(rec$Fed[6:length(rec$Fed)]), sum(rec$Freq[6:length(rec$Fed)])) 
 pie$Fed <- as.numeric(pie$Fed)
 pie <- arrange(pie, desc(Fed))
-
-pie.syr <- pie
-
-pie(as.numeric(pie$Fed), labels = paste0(pie$recipient_name, "\n" , round(pie$Fed/sum(pie$Fed), digits=2), "%"), main = "Main Recipients of Fed $ in Syracuse", cex= .7)
+pie.syr.rec <- pie
 
 ```
 
-#Rochester
+##Rochester
 
 ```{r}
 #Subsetting Rochester
 x <- gra16$recipient_city_name %in% c("Rochester", "ROCHESTER")
 
-roc16 <- gra16[x,c("maj_agency_cat",
+roc16 <- gra16[x,c("maj_agency_cat", "agency_name", "action_type",
                "cfda_program_num", "cfda_program_title", "fed_funding_amount", "non_fed_funding_amount",
                "total_funding_amount",	"asst_cat_type", "assistance_type", "record_type",
                "fiscal_year", "principal_place_cc", "project_description", "recipient_name", 
@@ -116,8 +140,11 @@ roc16 <- roc16[x,]
 #only interested in project grants
 x <- roc16$assistance_type == "04: Project grant"
 roc16 <- roc16[x,]
+```
 
-#Main recipients
+###Main Recipients
+```{r}
+#Main recipients in ROCHESTER
 rec <- group_by(roc16, recipient_name)
 rec <- arrange(as.data.frame(summarize(rec, Fed = sum(fed_funding_amount), Freq = n())), desc(Fed))
 
@@ -126,54 +153,207 @@ x <- rec$Fed < 0
 rec$Fed[x] <- 0
 rec <- arrange(rec, desc(Fed))
 
-#pie chart only 5 mayor recipients
+#printing head
+head(rec) %>% pander
 
-pie <- rec[1:7,]
-pie[8,] <- c("OTHERS", sum(rec$Fed[8:length(rec$Fed)]), sum(rec$Freq[8:length(rec$Fed)])) 
+#barplot
+par(mar = c(7,6,3,3), mfrow=c(1,1))
+barplot(rec$Fed/1000000, names.arg = rec$recipient_name, las = 2, cex.names = .7, cex.axis = .7 , ylab = "in USD 1MLL", cex.lab = .8)
+
+#creating an object for the pie chart of only 5 mayor recipients
+pie <- rec[1:5,]
+pie[6,] <- c("OTHERS", sum(rec$Fed[6:length(rec$Fed)]), sum(rec$Freq[6:length(rec$Fed)])) 
 pie$Fed <- as.numeric(pie$Fed)
 pie <- arrange(pie, desc(Fed))
-
-pie.roc <- pie
-pie(as.numeric(pie$Fed), labels = paste0(pie$recipient_name, "\n" , round(pie$Fed/sum(pie$Fed), digits=2), "%"), main = "Main Recipients of Fed $ in Rochester", cex= .7)
+pie.roc.rec <- pie
 
 ```
 
-#Comparing both cities
+##Comparing Top 5 Recipients in Syr and Roc
 
 ```{r}
+#pie charts!
+col <- c("#4979FF", "#FF9858",  "#8DFFFF", "#FF84FF", "#55D473", "#FFFF78")
+
 plot.new()
 par(mfrow = c(1,2), mar=c(0,0,3,0))
-pie(as.numeric(pie.syr$Fed), labels = paste0(pie.syr$recipient_name, "\n" , round(pie.syr$Fed/sum(pie.syr$Fed), digits=2), "%"), main = "Main Recipients of Fed $ in Syracuse", cex= .7)
-pie(as.numeric(pie.roc$Fed), labels = paste0(pie.roc$recipient_name, "\n" , round(pie.roc$Fed/sum(pie.roc$Fed), digits=2), "%"), main = "Main Recipients of Fed $ in Rochester", cex= .7)
+
+pie<- pie.syr.rec
+pie(as.numeric(pie$Fed), labels = paste0(pie$recipient_name, "\n" , round(pie$Fed/sum(pie$Fed)*100, digits=1), "%"), main = "Top 5 Recipients of Fed $ in Syracuse", cex= .7, col=col)
+
+pie<- pie.roc.rec
+pie(as.numeric(pie$Fed), labels = paste0(pie$recipient_name, "\n" , round(pie$Fed/sum(pie$Fed)*100, digits=1), "%"), main = "Top 5 Recipients of Fed $ in Rochester", cex= .7, col=col)
 
 ```
 
-#Programs give funding
+#Main Fed Agencies and Programs that give funding
 
+##Syracuse
+
+###Agencies
 ```{r}
-#ROCHESTER
-#Main recipients
-pro <- group_by(roc16, cfda_program_title)
-pro <- arrange(as.data.frame(summarize(rec, Fed = sum(fed_funding_amount), Freq = n())), desc(Fed))
+#Syracuse
 
-#removing negatives
-x <- rec$Fed < 0 
-rec$Fed[x] <- 0
-rec <- arrange(rec, desc(Fed))
+#First by Agencies
+dat <- group_by(syr16, agency_name)
+dat <- arrange(as.data.frame(summarize(dat, Fed = sum(fed_funding_amount), Freq = n())), desc(Fed))
 
 #pie chart only 5 mayor recipients
-
-pie <- rec[1:7,]
-pie[8,] <- c("OTHERS", sum(rec$Fed[8:length(rec$Fed)]), sum(rec$Freq[8:length(rec$Fed)])) 
+pie <- dat[1:5,]
+pie[6,] <- c("OTHERS", sum(dat$Fed[6:length(dat$Fed)]), sum(dat$Freq[6:length(dat$Fed)])) 
 pie$Fed <- as.numeric(pie$Fed)
 pie <- arrange(pie, desc(Fed))
+pie.syr.age <- pie
 
-pie.roc <- pie
-pie(as.numeric(pie$Fed), labels = paste0(pie$recipient_name, "\n" , round(pie$Fed/sum(pie$Fed), digits=2), "%"), main = "Main Recipients of Fed $ in Rochester", cex= .7)
+#removing negatives
+x <- dat$Fed < 0 
+dat$Fed[x] <- 0
+dat <- arrange(rec, desc(Fed))
+
+#printing head
+head(dat) %>% pander
+
+#barplot
+par(mar = c(7,6,3,3), mfrow=c(1,1))
+barplot(dat$Fed/1000000, names.arg = dat$recipient_name, las = 2, cex.names = .7, cex.axis = .7 , ylab = "in USD 1MLL", cex.lab = .8)
+
+```
+
+###Programs
+```{r}
+#Main programs
+dat <- group_by(roc16, cfda_program_title)
+dat <- arrange(as.data.frame(summarize(dat, Fed = sum(fed_funding_amount), Freq = n())), desc(Fed))
+
+pie <- dat[1:10,]
+pie[11,] <- c("OTHERS", sum(dat$Fed[11:length(dat$Fed)]), sum(dat$Freq[11:length(dat$Fed)])) 
+pie$Fed <- as.numeric(pie$Fed)
+pie <- arrange(pie, desc(Fed))
+pie.syr.pro <- pie
+
+#removing negatives
+x <- dat$Fed < 0 
+dat$Fed[x] <- 0
+dat <- arrange(rec, desc(Fed))
+
+#printing head
+head(dat) %>% pander
+
+#barplot
+par(mar = c(7,6,3,3), mfrow=c(1,1))
+barplot(dat$Fed/1000000, names.arg = dat$recipient_name, las = 2, cex.names = .7, cex.axis = .7 , ylab = "in USD 1MLL", cex.lab = .8)
+
 ```
 
 
- 
+##Comparing Top Funding Agencies and Programs in Syr and Roc
+
+```{r}
+#plotting both pies
+
+par(mfrow=c(2,1), mar=c(0,0,3,0))
+pie <- pie.syr.age
+pie(as.numeric(pie$Fed), labels = paste0(pie$agency_name, "\n" , round(pie$Fed/sum(pie$Fed)*100, digits=1), "%"), main = "Top 5 Agencies of Fed $ in Syracuse", cex= .7, col=col)
+
+pie <- pie.syr.pro
+pie(as.numeric(pie$Fed), labels = paste0(pie$cfda_program_title, "\n" , round(pie$Fed/sum(pie$Fed)*100, digits=1), "%"), main = "Top 10 Programs of Fed $ in Syracuse", cex= .7, col=col)
+
+```
+
+##Rochester
+
+###Agencies
+```{r}
+#ROCHESTER
+
+#First by Agencies
+dat <- group_by(roc16, agency_name)
+dat <- arrange(as.data.frame(summarize(dat, Fed = sum(fed_funding_amount), Freq = n())), desc(Fed))
+
+#pie chart only 5 mayor recipients
+pie <- dat[1:5,]
+pie[6,] <- c("OTHERS", sum(dat$Fed[6:length(dat$Fed)]), sum(dat$Freq[6:length(dat$Fed)])) 
+pie$Fed <- as.numeric(pie$Fed)
+pie <- arrange(pie, desc(Fed))
+pie.roc.age <- pie
+
+#removing negatives
+x <- dat$Fed < 0 
+dat$Fed[x] <- 0
+dat <- arrange(rec, desc(Fed))
+
+#printing head
+head(dat) %>% pander
+
+#barplot
+par(mar = c(7,6,3,3), mfrow=c(1,1))
+barplot(dat$Fed/1000000, names.arg = dat$recipient_name, las = 2, cex.names = .7, cex.axis = .7 , ylab = "in USD 1MLL", cex.lab = .8)
+
+############################
+```
+
+###Programs
+```{r}
+
+#Main programs
+dat <- group_by(roc16, cfda_program_title)
+dat <- arrange(as.data.frame(summarize(dat, Fed = sum(fed_funding_amount), Freq = n())), desc(Fed))
+
+pie <- dat[1:10,]
+pie[11,] <- c("OTHERS", sum(dat$Fed[11:length(dat$Fed)]), sum(dat$Freq[11:length(dat$Fed)])) 
+pie$Fed <- as.numeric(pie$Fed)
+pie <- arrange(pie, desc(Fed))
+pie.roc.pro <- pie
+
+#removing negatives
+x <- dat$Fed < 0 
+dat$Fed[x] <- 0
+dat <- arrange(rec, desc(Fed))
+
+#printing head
+head(dat) %>% pander
+
+#barplot
+par(mar = c(7,6,3,3), mfrow=c(1,1))
+barplot(dat$Fed/1000000, names.arg = dat$recipient_name, las = 2, cex.names = .7, cex.axis = .7 , ylab = "in USD 1MLL", cex.lab = .8)
+
+############################
+
+#plotting both pies
+
+par(mfrow=c(2,1), mar=c(0,0,3,0))
+pie <- pie.roc.age
+pie(as.numeric(pie$Fed), labels = paste0(pie$agency_name, "\n" , round(pie$Fed/sum(pie$Fed)*100, digits=1), "%"), main = "Top 5 Agencies of Fed $ in Rochester", cex= .7, col=col)
+
+pie <- pie.roc.pro
+pie(as.numeric(pie$Fed), labels = paste0(pie$cfda_program_title, "\n" , round(pie$Fed/sum(pie$Fed)*100, digits=1), "%"), main = "Top 10 Programs of Fed $ in Rochester", cex= .7, col=col)
+
+
+
+```
+
+###Comparable Pie charts for Agencies and Programs in both Syr and Roc
+
+```{r}
+#all four 
+par(mfrow=c(2,2), mar=c(0,0,3,0))
+pie <- pie.syr.age
+pie(as.numeric(pie$Fed), labels = paste0(pie$agency_name, "\n" , round(pie$Fed/sum(pie$Fed)*100, digits=1), "%"), main = "Top 5 Agencies of Fed $ in Syracuse", cex= .7, col=col)
+
+pie <- pie.syr.pro
+pie(as.numeric(pie$Fed), labels = paste0(pie$cfda_program_title, "\n" , round(pie$Fed/sum(pie$Fed)*100, digits=1), "%"), main = "Top 10 Programs of Fed $ in Syracuse", cex= .7, col=col)
+
+pie <- pie.roc.age
+pie(as.numeric(pie$Fed), labels = paste0(pie$agency_name, "\n" , round(pie$Fed/sum(pie$Fed)*100, digits=1), "%"), main = "Top 5 Agencies of Fed $ in Rochester", cex= .7, col=col)
+
+pie <- pie.roc.pro
+pie(as.numeric(pie$Fed), labels = paste0(pie$cfda_program_title, "\n" , round(pie$Fed/sum(pie$Fed)*100, digits=1), "%"), main = "Top 10 Programs of Fed $ in Rochester", cex= .7, col=col)
+
+```
+
+
+
+
  
  
  

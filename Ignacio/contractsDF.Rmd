@@ -11,14 +11,17 @@ html_document:
 knitr::opts_chunk$set( message=F, warning=F, fig.width = 10, fig.height = 10 )
 library(dplyr)
 library(pander)
-setwd("C:/Users/icps/Dropbox/3. Maxwell/4. Capston/Data-Capstone/ignacio")
+setwd("C:/Users/icps/Dropbox/3. Maxwell/4. Capston")
 cnt <- read.csv("./Data/NYcon2017.csv", stringsAsFactors = F)
+setwd("C:/Users/icps/Dropbox/3. Maxwell/4. Capston/Data-Capstone/ignacio")
 
 #making naics code two digit
 cnt$NAICS.code <- as.integer(substring(cnt$principalnaicscode, 1,2))
 
 #adding the name variable
+setwd("C:/Users/icps/Dropbox/3. Maxwell/4. Capston")
 naics <- read.csv("./Data/NAICS_cat.csv")
+setwd("C:/Users/icps/Dropbox/3. Maxwell/4. Capston/Data-Capstone/ignacio")
 x <- match(cnt$NAICS.code, naics$X2017.NAICS.Code)
 cnt$NAICS.name <- as.character(naics$X2017.NAICS.Title[x])
 
