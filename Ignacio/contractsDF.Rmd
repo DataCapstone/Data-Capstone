@@ -12,13 +12,13 @@ knitr::opts_chunk$set( message=F, warning=F, fig.width = 10, fig.height = 10 )
 library(dplyr)
 library(pander)
 setwd("C:/Users/icps/Dropbox/3. Maxwell/4. Capston/Data-Capstone/ignacio")
-cnt <- read.csv("NYcontracts.csv", stringsAsFactors = F)
+cnt <- read.csv("./Data/NYcon2017.csv", stringsAsFactors = F)
 
 #making naics code two digit
 cnt$NAICS.code <- as.integer(substring(cnt$principalnaicscode, 1,2))
 
 #adding the name variable
-naics <- read.csv("NAICS_cat.csv")
+naics <- read.csv("./Data/NAICS_cat.csv")
 x <- match(cnt$NAICS.code, naics$X2017.NAICS.Code)
 cnt$NAICS.name <- as.character(naics$X2017.NAICS.Title[x])
 
@@ -27,7 +27,7 @@ cnt$NAICS.name <- as.character(naics$X2017.NAICS.Title[x])
 ```{r, eval=FALSE}
 
 #getting a dataframe with the class for each variable
-x <- cnt[1,]
+x <- cnt[1,] 
 x <- as.data.frame(lapply(x, class))
 x <- as.data.frame(t(x))
 x <- data.frame(var = row.names(x), class = as.character(x$V1), stringsAsFactors = F)
@@ -45,9 +45,17 @@ https://www.fpds.gov/wiki/index.php/PSC,_NAICS_and_more
 Allows to look at contractors by name, DUNS or CAGE (look at search records)
 https://www.sam.gov/portal/SAM
 
+https://uscontractorregistration.com/
+
 * **Federal Acquisition Regulation (FAR)**
 https://www.acquisition.gov/?q=browsefar
 FAR contains the uniform policies and procedures for acquisitions by executive agencies of the federal government. The FAR is issued and maintained by the Department of Defense, the General Services Administration, and the National Aeronautics and Space Administration.
+
+* **Small Business Administration**
+
+https://www.sba.gov/blogs/selling-government-get-started-these-5-steps
+
+
 ***
 
 
@@ -70,6 +78,7 @@ Higher level NAICS categories:
 naics %>% pander
 ```
 
+When the Federal government intends to acquire goods or services, it identifies the NAICS code that describes the principal purpose of that procurement.  Your business may have myriad capabilities, and the NAICS code for a given procurement opportunity may not be the same as your primary NAICS code.  That will not keep you from bidding or making an offer, so long as you meet the size standard for the procurement and have the capacity to provide the goods or services.
 
 * **PSC** Product or Service Code
 https://www.fpds.gov/downloads/psc_data_Oct012015.xls
@@ -138,7 +147,7 @@ FLAGS
 * **DUNS** Data Universal Numbering System
 http://fedgov.dnb.com/webform/displayHomePage.do;jsessionid=E1E507FBF0B6F36823D2519B2F4E5981
 
-D-U-N-S is a code used for identifying business entities on a location-specific basis. Assigned and maintained solely by D&B, this unique nine-digit identification number has been assigned to over 100 million businesses worldwide. 
+D-U-N-S is a code used for identifying business entities on a location-specific basis. This means that there is a DUNS for each physical location of your business. Assigned and maintained solely by D&B, this unique nine-digit identification number has been assigned to over 100 million businesses worldwide. 
 A D-U-N-S Number remains with the company location to which it has been assigned even if it closes or goes out-of-business.
 The D-U-N-S Number also "unlocks" a wealth of value-added data associated with that entity, including the business name, physical and mailing addresses, tradestyles ("doing business as"), principal names, financial, payment experiences,industry classifications (SICs and NAICS), socio-economic status,government data and more. The D-U-N-S® Number also links members of corporate family trees worldwide.
 
@@ -146,6 +155,95 @@ The D-U-N-S® Number is widely used by both commercial and federal entities and 
 
 * **CAGE** The Commercial and Government Entity Code
 It is a unique identifier assigned to suppliers to various government or defense agencies, as well as to government agencies themselves and also various organizations. CAGE codes provide a standardized method of identifying a given facility at a specific location.
+
+
+* **Small Business**
+
+The U.S. government is the world's largest buyer of products and services. Purchases by military and civilian installations amount to nearly $400 billion a year, and include everything from complex space vehicles to janitorial services. In short, the government buys just about every category of commodity and service available. By law, federal agencies are required to establish small business contracting goals.The current, government‐wide procurement goal is that at least 23% of all government buys should be awarded to small businesses. The key word here, however, is that it’s only a goal.
+
+In addition, Federal contract goals are established for women‐owned businesses, small disadvantaged
+businesses, firms located in HUBZones and service disabled veteran‐owned businesses.
+These government‐wide goals, which are not always achieved, are 5%, 5%, 3% and 3%, respectively.
+They are important because Federal agencies have a statutory obligation to reach‐out and consider
+small businesses for procurement opportunities. However, again, these are only goals. It is up to you to
+market and match your business products and services to the buying needs of specific government
+agencies
+
+Qualifying as a Small Business
+You may take it for granted that your company is a "small business." The distinction is important if you wish to register for government contracting as a small business. To be a small business, you must adhere to industry size standards established by the U.S. Small Business Administration. As you register as a government contractor in the System for Award Management (SAM), you will also self-certify your business as small.
+
+The SBA, for most industries, defines a "small business" either in terms of the average number of employees over the past 12 months, or average annual receipts over the past three years. In addition, SBA defines a U.S. small business as a concern that:
+
+- Is organized for profit
+- Has a place of business in the US
+- Operates primarily within the U.S. or makes a significant contribution to the U.S. economy through payment of taxes or use of American products, materials or labor
+- Is independently owned and operated
+- Is not dominant in its field on a national basis
+
+The business may be a sole proprietorship, partnership, corporation, or any other legal form. In determining what constitutes a small business, the definition will vary to reflect industry differences, such as size standards.
+
+Size Standards
+Because all federal agencies must use SBA size standards for contracts identified as small business, you need to select NAICS codes that best describe your business and then determine if the business meet size standards for the selected NAICS codes
+https://www.sba.gov/contracting/getting-started-contractor/make-sure-you-meet-sba-size-standards/summary-size-standards-industry-sector
+
+How the government buys
+https://www.sba.gov/sites/default/files/Business%20Opportunities_Transcript_0.pdf
+
+Generally speaking, government purchases of individual items under $3,000.00 are considered micro‐
+purchases.Such government buys do not require competitive bids or quotes and agencies can simply pay using a
+Government Purchase Card or credit card, without the involvement of a procurement officer.
+An important point to remember is that micro‐purchases, unlike other small government buys under
+$100,000, are not reserved for small businesses
+
+Government agencies, however,
+are still required to advertise all planned purchases over $25,000 in Federal Business Opportunities, the
+government’s online listing and database of available procurement opportunities. Simplified procedures
+require fewer administrative details, fewer approval levels, and less documentation. The procedures
+require all federal purchases above $3,000, but under $100,000, to be reserved for small businesses, an
+important point
+
+Sealed bidding is how the government buys competitively when its requirements are very specific, clear
+and complete.
+An IFB or “Invitation For Bid” is the method used for the sealed bid process. Typically, an IFB includes a
+description of the product or service to be acquired, instructions for preparing a bid, the conditions for
+purchase, delivery, payment and other requirements associated with the bid, including a deadline for
+bid submissions.
+Each sealed bid is opened in a public setting by a government contracting officer, at the time designated
+in the invitation. All bids are read aloud and recorded. A contract is then awarded by the agency to the
+lowest bidder who is determined to be fully responsive to the needs of the government.
+
+
+
+* **The Central Contractor Registration (CCR)**
+
+The Central Contractor Registration, more commonly known as the CCR, is the primary source for
+agencies to learn about prospective vendors.The CCR is a government‐maintained database of companies wanting to do business with thegovernment. This database is a marketing tool for businesses and a searchable list of prospective vendors for the government. The CCR provides agencies with the ability to search for companies based
+on their abilities, size, location, experience, and ownership. In addition, the CCR is the vehicle used to identify or self‐certify your company as a small business, woman‐owned, veteran‐owned and/or a service‐disabled, veteran owned business
+
+* **HUBZones**
+
+The term HUBZone comes from the phrase, Historically Underutilized Business Zone.
+The HUBZone Program is designed to stimulate economic development and create jobs in urban and
+rural communities by providing federal contracting preferences to small businesses. These preferences
+are available to small firms who qualify because they are located in a HUBZone designated area or
+employ staff who live in such an area.
+
+
+* **8(a) Business Development Program & Small Disadvantaged Business Certifications**
+
+SBA administers two specific business assistance initiatives for small disadvantaged businesses. These
+initiatives are the 8(a) Program, we just discussed, and Small Disadvantaged Business Certifications. The
+SDB initiative requires eligible companies to be formally certified by the SBA.
+While the 8(a) Program offers a broad scope of assistance to socially and economically disadvantaged
+firms, SDB certification strictly pertains to benefits in federal procurement. Firms that are 8(a) certified
+automatically qualify for SDB certification
+
+The 8(a) Business Development Program is designed to assist eligible socially and economically
+disadvantaged small businesses. The program provides qualified firms access to capital and credit,
+business counseling and training, and Federal and non‐Federal procurement opportunities.
+Through the award of sole source and limited‐competition contracts, the 8(a) program provides market
+access and growth for qualified businesses. The 8(a) program is not intended for everyone. You must be
+eligible to participate and receive formal certification from the SBA.
 
 ***
 
@@ -174,7 +272,6 @@ Those in **bold** seem the most useful to me...
  * **contractactiontype**                              : chr  "C: DELIVERY ORDER"
  * typeofcontractpricing                           : chr  "J: FIRM FIXED PRICE" "J: FIRM FIXED PRICE"
  * contractfinancing
- * multiyearcontract                               : chr  "" "N: NO" "Y: YES" "N: NO"
  * **competitiveprocedures**
  * multipleorsingleawardidc                    : Indicates whether the contract is one of many that resulted from a single solicitation
  * multiyearcontract                       : Indicates whether this is a multi-year contract, a contract for the purchase of supplies or services for more than 1, but not more than 5, program years. Such contracts are issued under specific congressional
@@ -183,6 +280,11 @@ Those in **bold** seem the most useful to me...
  * currentcompletiondate
 
 
+**Product service**
+
+ * **productorservicecode**              : chr  "J041: MAINT/REPAIR/REBUILD OF EQUIPMENT..."
+ * **psc_cat**               : The major category that the Federal Procurement Data System Product or Service Code
+ 
 **Place of performance of Contract**
 
  * **placeofperformancecity**                         : chr  "MONTROSE" "NEW YORK" "NORTHPORT" "JAMAICA" ...
@@ -191,7 +293,6 @@ Those in **bold** seem the most useful to me...
  * **placeofperformancezipcode**                       : int  105480001
  * pop_cd                                          : chr  "NY17" "NY12" "NY03" "NY05" ...
  * placeofperformancecongressionaldistrict         : chr  "NY17"
- * **psc_cat**                                         : chr  "J" "R" "J" "V" ...
  * locationcode                                   : for the place of Performance
 
 
@@ -284,10 +385,6 @@ Those in **bold** seem the most useful to me...
  * isotherbusinessororganization
  
 
-**4. PRODUCT or SERVICE TYPE**
-
- * **productorservicecode**              : chr  "J041: MAINT/REPAIR/REBUILD OF EQUIPMENT..."
- * **psc_cat**               : The major category that the Federal Procurement Data System Product or Service Code
 
 ***
 
@@ -386,38 +483,3 @@ head(nai) %>% pander
 par(mar = c(6,6,3,3))
 barplot(nai$Monies/100000, names.arg = nai$NAICS.name, las = 2, cex.names = .7, cex.axis = .7 , ylab = "USD 100,000", cex.lab = .8)
 ```
-
-
-I want to look further into the following NAICS:
-
-* Manufacturing
-* Professional, Scientific, and Technical Services
-* Health Care and Social Assistance
-* Construction
-* Educational Services
-
-```{r}
-#subsetting Manufacturing NAICS
-x <- cnt$NAICS.name == "Manufacturing"
-man <- cnt[x, c("dollarsobligated", "maj_agency_cat", "contractactiontype", "vendorname", "productorservicecode", "NAICS.name")]
-
-x <- is.na(man$dollarsobligated)
-sum(man$dollarsobligated[!x], na.rm = T)
-length(man$dollarsobligated[!x])
-```
-
-```{r}
-
-x <- cnt$vendorname == "POLYMEDCO CANCER DIAGNOSTIC PRODUCTS LLC"
-pol <- cnt[x, c("maj_agency_cat", "dollarsobligated", "contractactiontype", "vendorname", "dunsnumber", "NAICS.name", "productorservicecode")]
-
-unique(pol$productorservicecode)
-
-length(unique(cnt$vendorname))
-length(unique(cnt$vendorname))
-
-str(cnt)
-```
-
-
-

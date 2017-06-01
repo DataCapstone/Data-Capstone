@@ -1,0 +1,112 @@
+---
+title: "Contracts dataframe"
+output: github_document
+html_document:
+  df_print: paged
+  keep_md: true
+  code_fold: hide
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set( message=F, warning=F, fig.width = 10, fig.height = 10 )
+library(dplyr)
+library(pander)
+setwd("C:/Users/icps/Dropbox/3. Maxwell/4. Capston/Data-Capstone/ignacio")
+cnt <- read.csv("./Data/NYcon2017.csv", stringsAsFactors = F)
+
+cnt$transaction_status
+
+#making naics code two digit
+cnt$NAICS.code <- as.integer(substring(cnt$principalnaicscode, 1,2))
+
+#adding the name variable
+naics <- read.csv("NAICS_cat.csv")
+x <- match(cnt$NAICS.code, naics$X2017.NAICS.Code)
+cnt$NAICS.name <- as.character(naics$X2017.NAICS.Title[x])
+
+```
+
+
+***
+
+#Working by a NAICS code
+
+Interesting NAICS:
+
+* Manufacturing
+* Professional, Scientific, and Technical Services
+* Health Care and Social Assistance
+* Construction
+* Educational Services
+
+```{r}
+#subsetting Construction NAICS
+x <- cnt$NAICS.name == "Construction"
+con <- cnt[x, c("piid", "maj_agency_cat", "dollarsobligated", 
+                      "contractactiontype", "productorservicecode", "psc_cat",
+                      "pop_state_code", "placeofperformancecity", 
+                      "competitiveprocedures", "multiyearcontract", "multipleorsingleawardidc", 
+                      "vendorname", "NAICS.name", "receivescontracts", "receivesgrants",
+                      "receivescontractsandgrants", "annualrevenue", "numberofemployees", "isconstructionfirm")]
+
+#sum of money in Construction
+x <- is.na(con$dollarsobligated)
+sum(con$dollarsobligated[!x], na.rm = T)
+
+#number of cases
+length(con$dollarsobligated[!x])
+
+#top 5 Agencies
+arrange(as.data.frame(table(con$maj_agency_cat)), desc(Freq))[c(1:5),]
+
+#Top 5 PSC
+arrange(as.data.frame(table(con$productorservicecode)), desc(Freq))[c(1:5),]
+arrange(as.data.frame(table(con$psc_cat)), desc(Freq))[c(1:5),] #better to use this code!
+
+#top 5 Vendors
+arrange(as.data.frame(table(con$vendorname)), desc(Freq))[c(1:5),]
+con.grp <- group_by(con, vendorname)
+con.grp <- arrange(summarize(con.grp, Monies = sum(dollarsobligated), Freq = n()), desc(Monies))
+
+
+#Looking at only the top vendor
+
+x <- cnt$vendorname == "TRIO ASBESTOS REMOVAL CORP." & cnt$NAICS.name == "Construction"
+con2 <- cnt[x, c("piid", "maj_agency_cat", "dollarsobligated", 
+                      "contractactiontype", "productorservicecode", "psc_cat",
+                      "pop_state_code", "placeofperformancecity", 
+                      "competitiveprocedures", "multiyearcontract", "multipleorsingleawardidc", 
+                      "vendorname", "NAICS.name", "receivescontracts", "receivesgrants",
+                      "receivescontractsandgrants", "annualrevenue", "numberofemployees", "isconstructionfirm")]
+
+unique(con2$productorservicecode)
+
+
+#filtering by isacontructionfirm
+unique(as.character(cnt$isconstructionfirm)) #this variable is not useful
+
+```
+
+***
+
+#Working by Agency
+
+Interesting Agencies:
+
+"7300: Small Business Administration" 
+"8600: Department of Housing and Urban Development"
+"9100: Department of Education"  
+"6900: Department of Transportation"
+
+```{r}
+
+```
+
+***
+
+#Working by Vendor
+
+```{r}
+
+
+```

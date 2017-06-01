@@ -1,0 +1,47 @@
+---
+title: "Api requests"
+output: github_document
+html_document:
+  df_print: paged
+  keep_md: true
+  code_fold: hide
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set( message=F, warning=F, fig.width = 10, fig.height = 10 )
+
+library( dplyr)
+library( pander)
+library( httr )
+library( jsonlite )
+library( lubridate)
+library( rgdal )
+
+setwd("C:/Users/icps/Dropbox/3. Maxwell/4. Capston/Data-Capstone/ignacio")
+
+```
+
+
+API
+
+Links
+* "Accessing APIs from R" - https://www.r-bloggers.com/accessing-apis-from-r-and-a-little-r-programming/
+* "USA Spending API endpoints" - https://api.usaspending.gov/docs/endpoints
+
+```{r}
+url <- "https://api.usaspending.gov/"
+path <- "api/v1/accounts/awards/"
+
+
+raw <- GET(   url = url, path = path)
+
+(raw$content)
+
+txt <- rawToChar(raw$content) #the result is a single character string that contains a JSON file. Let’s tell R to parse it into something R can work with.
+
+txt <- fromJSON(txt) #is a list
+
+txt <- as.data.frame(txt[3], stringsAsFactors = F)
+
+```
+

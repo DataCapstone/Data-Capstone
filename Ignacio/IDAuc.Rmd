@@ -1,0 +1,201 @@
+---
+title: "IDA Use Case"
+output: github_document
+html_document:
+  df_print: paged
+  keep_md: true
+  code_fold: hide
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set( message=F, warning=F, fig.width = 10, fig.height = 10 )
+library(dplyr)
+library(pander)
+setwd("C:/Users/icps/Dropbox/3. Maxwell/4. Capston/Data-Capstone/ignacio")
+
+#Two DF manually downloaded from usapspending.gov
+
+#Formatting the contracts DF
+cnt <- read.csv("./Data/NYcon2017.csv", stringsAsFactors = F)
+#making naics code two digit
+cnt$NAICS.code <- as.integer(substring(cnt$principalnaicscode, 1,2))
+#adding the name variable
+naics <- read.csv("./Data/NAICS_cat.csv")
+x <- match(cnt$NAICS.code, naics$X2017.NAICS.Code)
+cnt$NAICS.name <- as.character(naics$X2017.NAICS.Title[x])
+
+#Formatting the grants DF
+gra17 <- read.csv("./Data/NYgra2017.csv", stringsAsFactors = F)
+gra16 <- read.csv("./Data/NYgra2016.csv", stringsAsFactors = F)
+gra15 <- read.csv("./Data/NYgra2015.csv", stringsAsFactors = F)
+gra14 <- read.csv("./Data/NYgra2014.csv", stringsAsFactors = F)
+
+```
+
+
+#Use case
+
+**Position**: Howard Zemsky president and CEO of Empire State Development
+**Organization**: Empire State Development
+**Location**: NY
+**Sector**: Local Government (State)
+**Interest/question**: Wants to know which cities in their state are missing out on potential funds that they could apply for and needs a breakdown of per capita federal spending in each city to assess areas of need.
+ 
+ 
+ 
+#Descriptives for Syracuse
+```{r}
+#Subsetting Syracuse
+x <- gra16$recipient_city_name %in% c("Syracuse", "SYRACUSE")
+
+syr16 <- gra16[x,c("maj_agency_cat",
+               "cfda_program_num", "cfda_program_title", "fed_funding_amount", "non_fed_funding_amount",
+               "total_funding_amount",	"asst_cat_type", "assistance_type", "record_type",
+               "fiscal_year", "principal_place_cc", "project_description", "recipient_name", 
+               "recipient_type", "recip_cat_type", "recipient_city_name", "recipient_county_name",
+               "recipient_state_code", "exec1_fullname", "exec1_amount")]
+
+#Only interested in pure Federal grants
+x <- syr16$non_fed_funding_amount == 0
+syr16 <- syr16[x,]
+
+#what type of assistances are they getting?
+unique(syr16$asst_cat_type)
+unique(syr16$assistance_type)
+
+ass <- group_by(syr16, assistance_type)
+ass <- arrange(as.data.frame(summarize(ass, Freq = n())), desc(Freq))
+
+#only interested in project grants
+
+x <- syr16$assistance_type == "04: Project grant"
+syr16 <- syr16[x,]
+
+#Main recipients
+options(scipen = 999)
+rec <- group_by(syr16, recipient_name)
+rec <- arrange(as.data.frame(summarize(rec, Fed = sum(fed_funding_amount), Freq = n())), desc(Fed))
+
+#removing negatives
+x <- rec$Fed < 0 
+rec$Fed[x] <- 0
+rec <- arrange(rec, desc(Fed))
+
+#pie chart only 5 mayor recipients
+
+pie <- rec[1:7,]
+
+pie[8,] <- c("OTHERS", sum(rec$Fed[8:length(rec$Fed)]), sum(rec$Freq[8:length(rec$Fed)])) 
+
+pie$Fed <- as.numeric(pie$Fed)
+pie <- arrange(pie, desc(Fed))
+
+pie.syr <- pie
+
+pie(as.numeric(pie$Fed), labels = paste0(pie$recipient_name, "\n" , round(pie$Fed/sum(pie$Fed), digits=2), "%"), main = "Main Recipients of Fed $ in Syracuse", cex= .7)
+
+```
+
+#Rochester
+
+```{r}
+#Subsetting Rochester
+x <- gra16$recipient_city_name %in% c("Rochester", "ROCHESTER")
+
+roc16 <- gra16[x,c("maj_agency_cat",
+               "cfda_program_num", "cfda_program_title", "fed_funding_amount", "non_fed_funding_amount",
+               "total_funding_amount",	"asst_cat_type", "assistance_type", "record_type",
+               "fiscal_year", "principal_place_cc", "project_description", "recipient_name", 
+               "recipient_type", "recip_cat_type", "recipient_city_name", "recipient_county_name",
+               "recipient_state_code", "exec1_fullname", "exec1_amount")]
+
+#Only interested in pure Federal grants
+x <- roc16$non_fed_funding_amount == 0
+roc16 <- roc16[x,]
+
+#only interested in project grants
+x <- roc16$assistance_type == "04: Project grant"
+roc16 <- roc16[x,]
+
+#Main recipients
+rec <- group_by(roc16, recipient_name)
+rec <- arrange(as.data.frame(summarize(rec, Fed = sum(fed_funding_amount), Freq = n())), desc(Fed))
+
+#removing negatives
+x <- rec$Fed < 0 
+rec$Fed[x] <- 0
+rec <- arrange(rec, desc(Fed))
+
+#pie chart only 5 mayor recipients
+
+pie <- rec[1:7,]
+pie[8,] <- c("OTHERS", sum(rec$Fed[8:length(rec$Fed)]), sum(rec$Freq[8:length(rec$Fed)])) 
+pie$Fed <- as.numeric(pie$Fed)
+pie <- arrange(pie, desc(Fed))
+
+pie.roc <- pie
+pie(as.numeric(pie$Fed), labels = paste0(pie$recipient_name, "\n" , round(pie$Fed/sum(pie$Fed), digits=2), "%"), main = "Main Recipients of Fed $ in Rochester", cex= .7)
+
+```
+
+#Comparing both cities
+
+```{r}
+plot.new()
+par(mfrow = c(1,2), mar=c(0,0,3,0))
+pie(as.numeric(pie.syr$Fed), labels = paste0(pie.syr$recipient_name, "\n" , round(pie.syr$Fed/sum(pie.syr$Fed), digits=2), "%"), main = "Main Recipients of Fed $ in Syracuse", cex= .7)
+pie(as.numeric(pie.roc$Fed), labels = paste0(pie.roc$recipient_name, "\n" , round(pie.roc$Fed/sum(pie.roc$Fed), digits=2), "%"), main = "Main Recipients of Fed $ in Rochester", cex= .7)
+
+```
+
+#Programs give funding
+
+```{r}
+#ROCHESTER
+#Main recipients
+pro <- group_by(roc16, cfda_program_title)
+pro <- arrange(as.data.frame(summarize(rec, Fed = sum(fed_funding_amount), Freq = n())), desc(Fed))
+
+#removing negatives
+x <- rec$Fed < 0 
+rec$Fed[x] <- 0
+rec <- arrange(rec, desc(Fed))
+
+#pie chart only 5 mayor recipients
+
+pie <- rec[1:7,]
+pie[8,] <- c("OTHERS", sum(rec$Fed[8:length(rec$Fed)]), sum(rec$Freq[8:length(rec$Fed)])) 
+pie$Fed <- as.numeric(pie$Fed)
+pie <- arrange(pie, desc(Fed))
+
+pie.roc <- pie
+pie(as.numeric(pie$Fed), labels = paste0(pie$recipient_name, "\n" , round(pie$Fed/sum(pie$Fed), digits=2), "%"), main = "Main Recipients of Fed $ in Rochester", cex= .7)
+```
+
+
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+**Dataset**:
+ 
+**Relevant Variables**:
+ 
+**Description of Analysis**:
+ 
+**Coded Tools needed**:
+ 
+**Visualizations**:
+ 
+**Journey map**:
+ 
+**Final insights/answers to the interest/question/other added value**:
+ 
+**Limitations/further work**:
+
+
+
