@@ -11,11 +11,9 @@ html_document:
 knitr::opts_chunk$set( message=F, warning=F, fig.width = 10, fig.height = 10 )
 library(dplyr)
 library(pander)
-setwd("C:/Users/icps/Dropbox/3. Maxwell/4. Capston")
-gra16 <- read.csv("./Data/NYgra2016.csv", stringsAsFactors = F)
 setwd("C:/Users/icps/Dropbox/3. Maxwell/4. Capston/Data-Capstone/ignacio")
+gra16 <- readRDS( gzcon(url("https://github.com/DataCapstone/Data-Capstone/blob/master/Raw-Data/NYgra16.rds?raw=true")))
 
-readRDS(gra16, file = "NYgra16.rds")
 
 ```
 

@@ -81,43 +81,43 @@ x$cfda <- substr(as.character(x$cfda_program_num), 1,2)
 length(unique(x$maj_agency_cat)) #24
 ```
 
-    ## [1] 24
+    ## [1] 27
 
 ``` r
 length(unique(x$maj)) #23
 ```
 
-    ## [1] 23
+    ## [1] 26
 
 ``` r
 length(unique(x$agency_code)) #83
 ```
 
-    ## [1] 83
+    ## [1] 103
 
 ``` r
 length(unique(x$cod)) #25
 ```
 
-    ## [1] 25
+    ## [1] 28
 
 ``` r
 length(unique(x$agency_name)) #67
 ```
 
-    ## [1] 67
+    ## [1] 79
 
 ``` r
 length(unique(x$cfda)) #24
 ```
 
-    ## [1] 24
+    ## [1] 27
 
 ``` r
 length(unique(x$cfda_program_num)) #782
 ```
 
-    ## [1] 782
+    ## [1] 908
 
 looking at action type
 ======================
@@ -128,20 +128,13 @@ looking at action type
 head(arrange(as.data.frame(table(gra16$cfda_program_title)), desc(Freq)))
 ```
 
-    ##                                                                         Var1
-    ## 1                                          Highway Planning and Construction
-    ## 2                                                                           
-    ## 3                                  Biomedical Research and Research Training
-    ## 4                           Allergy, Immunology and Transplantation Research
-    ## 5 Extramural Research Programs in the Neurosciences and Neurological Disorde
-    ## 6                                              Mental Health Research Grants
-    ##   Freq
-    ## 1 9792
-    ## 2 1088
-    ## 3  781
-    ## 4  582
-    ## 5  497
-    ## 6  495
+    ##                                               Var1 Freq
+    ## 1                Highway Planning and Construction 9792
+    ## 2                                                  2375
+    ## 3        Biomedical Research and Research Training  802
+    ## 4                        Public and Indian Housing  763
+    ## 5 Allergy, Immunology and Transplantation Research  593
+    ## 6          Awards to Organizations and Individuals  515
 
 ``` r
 x <- gra16$cfda_program_title == "Highway Planning and Construction"
