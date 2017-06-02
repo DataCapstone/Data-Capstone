@@ -68,15 +68,15 @@ sort(unique(gra16$principal_place_state))
 sort(unique(gra16$recipient_state_code)) 
 #output is only NY, so the filter is by recipients place, which makes sense because if we are an IDA we should care about the recipient not the pop.
 
-sort(unique(gra16$recipient_city_name)) 
+head(sort(unique(gra16$recipient_city_name)))
 # "Syracuse" | "SYRACUSE"   
 # "Rochester" | "ROCHESTER"
 # "Albany" | "ALBANY"
 #  "Ithaca" | "ITHACA" 
 
-sort(unique(gra16$recipient_county_code))
-sort(unique(gra16$recipient_county_name))
-sort(unique(gra16$recipient_state_code))
+head(sort(unique(gra16$recipient_county_code)))
+head(sort(unique(gra16$recipient_county_name)))
+head(sort(unique(gra16$recipient_state_code)))
 
 ```
 
@@ -85,19 +85,15 @@ sort(unique(gra16$recipient_state_code))
 #looking for consistency in the names of agencies / programs
 
 x <- gra16[, c("maj_agency_cat", "agency_name", "agency_code", "cfda_program_num", "cfda_program_title")]
-
 x$maj <- substr(x$maj_agency_cat, 1,2)
 x$cod <- substr(x$agency_code, 1,2)
-unique(x$maj)
-unique(x$cod)
 x$cfda <- substr(as.character(x$cfda_program_num), 1,2)
 
-table(x$maj == x$cod) #only 4 inconsistencies between the first two numbers of agency maj and agency code.
+#table(x$maj == x$cod) #only 4 inconsistencies between the first two numbers of agency maj and agency code.
 
-table(x$maj == x$cfda) #only 43 times they are the same
+#table(x$maj == x$cfda) #only 43 times they are the same
 #and this is when:
-x[x$maj == x$cfda,] #19 for department of state in both cfda codes and agency code
-
+#x[x$maj == x$cfda,] #19 for department of state in both cfda codes and agency code
 
 length(unique(x$maj_agency_cat)) #24
 length(unique(x$maj)) #23
@@ -185,10 +181,35 @@ head(arrange(as.data.frame(table(dat$act_typ)), desc(Freq)))
 * 57	exec1_fullname	character
 * 58	exec1_amount	numeric
 
+
+#recip_cat_type and recipient_type equivalencies
+
+* g: Government -> 00: State government           
+* g: Government -> 02: City or township government
+* g: Government -> 01: County government
+* g: Government -> 04: Special district government
+* g: Government -> 05: Independent school district
+* h: Government -> 06: State controlled institution of higher education
+ 
+* n: Nonprofit agencies -> "12: Other nonprofit"                                 
+* n: Nonprofit agencies -> "11: Indian tribe"                                    
+
+* h: Private agencies -> 20: Private higher education
+* f: Private agencies -> 22: Profit organization
+* f: Private agencies -> 23: Small business
+* i: Private agencies -> 21: Individual
+* o: Private agencies -> 25: All other
+
+
 #Questions
 
 1. how to work with negatives?
 
 2. when looking at the action type 
 
-Continuation (funding in succeeding budget period which stemmed from prior agreement to fund amount of the current action)"  This means we are double counting money?
+3. Continuation (funding in succeeding budget period which stemmed from prior agreement to fund amount of the current action)"  This means we are double counting money?
+
+ 
+                                
+
+

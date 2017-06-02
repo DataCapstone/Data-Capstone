@@ -8,7 +8,7 @@ html_document:
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set( message=F, warning=F, fig.width = 10, fig.height = 10 )
+knitr::opts_chunk$set( echo = F, message=F, warning=F, fig.width = 10, fig.height = 10 )
 library(dplyr)
 library(pander)
 setwd("C:/Users/icps/Dropbox/3. Maxwell/4. Capston")
@@ -25,10 +25,10 @@ x <- match(cnt$NAICS.code, naics$X2017.NAICS.Code)
 cnt$NAICS.name <- as.character(naics$X2017.NAICS.Title[x])
 
 #Formatting the grants DF
-gra17 <- read.csv("./Data/NYgra2017.csv", stringsAsFactors = F)
+#gra17 <- read.csv("./Data/NYgra2017.csv", stringsAsFactors = F)
 gra16 <- read.csv("./Data/NYgra2016.csv", stringsAsFactors = F)
-gra15 <- read.csv("./Data/NYgra2015.csv", stringsAsFactors = F)
-gra14 <- read.csv("./Data/NYgra2014.csv", stringsAsFactors = F)
+#gra15 <- read.csv("./Data/NYgra2015.csv", stringsAsFactors = F)
+#gra14 <- read.csv("./Data/NYgra2014.csv", stringsAsFactors = F)
 
 setwd("C:/Users/icps/Dropbox/3. Maxwell/4. Capston/Data-Capstone/ignacio")
 
@@ -43,56 +43,171 @@ setwd("C:/Users/icps/Dropbox/3. Maxwell/4. Capston/Data-Capstone/ignacio")
 * **Sector**: Local Government (State)
 * **Interest/question**: Wants to know which cities in their state are missing out on potential funds that they could apply for and needs a breakdown of per capita federal spending in each city to assess areas of need.
  
-In what follows I will elaborate comparisons between Rochester and Syracuse
- 
-#Main Recipients of Fed $
+In what follows I will elaborate comparisons between Rochester, Syracuse, Ithaca, Buffalo and Albany.
 
-##Syracuse
+
 ```{r}
+#Generating subsets for 5 cities 2016 data
+
 #Subsetting sry16
 x <- gra16$recipient_city_name %in% c("Syracuse", "SYRACUSE")
 
-syr16 <- gra16[x,c("maj_agency_cat", "agency_name", "action_type",
+dat <- gra16[x,c("maj_agency_cat", "agency_name", "action_type",
                "cfda_program_num", "cfda_program_title", "fed_funding_amount", "non_fed_funding_amount",
                "total_funding_amount",	"asst_cat_type", "assistance_type", "record_type",
                "fiscal_year", "principal_place_cc", "project_description", "recipient_name", 
                "recipient_type", "recip_cat_type", "recipient_city_name", "recipient_county_name",
                "recipient_state_code", "exec1_fullname", "exec1_amount")]
 
-#exploring
-
-#what type of assistances are they getting?
-#unique(syr16$asst_cat_type)
-#[1] "G"
-
-#unique(syr16$assistance_type)
-#[1] "04: Project grant"         "03: Formula grant"         "05: Cooperative agreement"
-
-#ass <- group_by(syr16, assistance_type)
-#ass <- arrange(as.data.frame(summarize(ass, Freq = n())), desc(Freq))
-#            assistance_type Freq
-#1         04: Project grant  208
-#2 05: Cooperative agreement   34
-#3         03: Formula grant    4
-
-#action_type: The type of action for the record: whether it is a new assistance action, a continuation, a revision, or a funding adjustment.
-
-unique(syr16$action_type) #character type
-
 #Only interested in pure Federal grants
-x <- syr16$non_fed_funding_amount == 0
-syr16 <- syr16[x,]
+x <- dat$non_fed_funding_amount == 0
+dat <- dat[x,]
 
 #only interested in project grants
-x <- syr16$assistance_type == "04: Project grant"
-syr16 <- syr16[x,]
+x <- dat$assistance_type == "04: Project grant"
+dat <- dat[x,]
 
-#should we also be interested in only one particular action? 
-#I will agregate all types because if something adds or reduces its better to have it all summed up.
+#saving it as syr16
+syr16 <- dat
+
+###########################
+
+#Subsetting Rochester
+x <- gra16$recipient_city_name %in% c("Rochester", "ROCHESTER")
+
+dat <- gra16[x,c("maj_agency_cat", "agency_name", "action_type",
+               "cfda_program_num", "cfda_program_title", "fed_funding_amount", "non_fed_funding_amount",
+               "total_funding_amount",	"asst_cat_type", "assistance_type", "record_type",
+               "fiscal_year", "principal_place_cc", "project_description", "recipient_name", 
+               "recipient_type", "recip_cat_type", "recipient_city_name", "recipient_county_name",
+               "recipient_state_code", "exec1_fullname", "exec1_amount")]
+
+#Only interested in pure Federal grants
+x <- dat$non_fed_funding_amount == 0
+dat <- dat[x,]
+
+#only interested in project grants
+x <- dat$assistance_type == "04: Project grant"
+dat <- dat[x,]
+
+roc16 <- dat
+###########################
+
+#Subsetting for Albany
+x <- gra16$recipient_city_name %in% c("Albany", "ALBANY")
+
+dat <- gra16[x,c("maj_agency_cat", "agency_name", "action_type",
+               "cfda_program_num", "cfda_program_title", "fed_funding_amount", "non_fed_funding_amount",
+               "total_funding_amount",	"asst_cat_type", "assistance_type", "record_type",
+               "fiscal_year", "principal_place_cc", "project_description", "recipient_name", 
+               "recipient_type", "recip_cat_type", "recipient_city_name", "recipient_county_name",
+               "recipient_state_code", "exec1_fullname", "exec1_amount")]
+
+#Only interested in pure Federal grants
+x <- dat$non_fed_funding_amount == 0
+dat <- dat[x,]
+
+#only interested in project grants
+x <- dat$assistance_type == "04: Project grant"
+dat <- dat[x,]
+
+alb16 <- dat
+
+###########################
+
+#Subsetting for Ithaca
+x <- gra16$recipient_city_name %in% c("Ithaca", "ITHACA")
+
+dat <- gra16[x,c("maj_agency_cat", "agency_name", "action_type",
+               "cfda_program_num", "cfda_program_title", "fed_funding_amount", "non_fed_funding_amount",
+               "total_funding_amount",	"asst_cat_type", "assistance_type", "record_type",
+               "fiscal_year", "principal_place_cc", "project_description", "recipient_name", 
+               "recipient_type", "recip_cat_type", "recipient_city_name", "recipient_county_name",
+               "recipient_state_code", "exec1_fullname", "exec1_amount")]
+
+#Only interested in pure Federal grants
+x <- dat$non_fed_funding_amount == 0
+dat <- dat[x,]
+
+#only interested in project grants
+x <- dat$assistance_type == "04: Project grant"
+dat <- dat[x,]
+
+ith16 <- dat
+
+
+###########################
+
+#Subsetting for Buffalo
+x <- gra16$recipient_city_name %in% c("Buffalo", "BUFFALO")
+
+dat <- gra16[x,c("maj_agency_cat", "agency_name", "action_type",
+               "cfda_program_num", "cfda_program_title", "fed_funding_amount", "non_fed_funding_amount",
+               "total_funding_amount",	"asst_cat_type", "assistance_type", "record_type",
+               "fiscal_year", "principal_place_cc", "project_description", "recipient_name", 
+               "recipient_type", "recip_cat_type", "recipient_city_name", "recipient_county_name",
+               "recipient_state_code", "exec1_fullname", "exec1_amount")]
+
+#Only interested in pure Federal grants
+x <- dat$non_fed_funding_amount == 0
+dat <- dat[x,]
+
+#only interested in project grants
+x <- dat$assistance_type == "04: Project grant"
+dat <- dat[x,]
+
+buf16 <- dat
 
 ```
 
-###Main Recipients
+#Total Amount of FED money going to the chosen cities
+
+```{r}
+
+x <- data.frame(City = c("Syr", "Roc", "Buf", "Ith", "Alb"), Fed = c(sum(syr16$fed_funding_amount), sum(roc16$fed_funding_amount), sum(buf16$fed_funding_amount), sum(ith16$fed_funding_amount), sum(alb16$fed_funding_amount)))
+
+x<- arrange(x, desc(Fed))
+
+#barplot
+par(mar = c(7,6,3,3), mfrow=c(1,1))
+barplot(x$Fed/1000000, names.arg = x$City, las = 2, cex.names = .7, cex.axis = .7 , ylab = "in USD 1MLL", cex.lab = .8, col="#4979FF")
+  text(y=x$Fed[5]/1000000+250, x=5, as.character(round(x$Fed[5]/1000000, digits=1)), cex = .7)       
+
+for (i in 1:length(x$Fed)) {
+    text(y=x$Fed[i]/1000000+250, x=i, as.character(round(x$Fed[i]/1000000, digits=1)), cex = .7)       
+}
+
+  length(unique(gra16$cfda_program_title))
+
+
+```
+
+
+#Main Recipient Types (recip_cat_type) of Fed $ in the cities
+
+##Syracuse
+```{r}
+#Main recipients at syr
+options(scipen = 999)
+rec <- group_by(syr16, recip_cat_type)
+rec <- arrange(as.data.frame(summarize(rec, Fed = sum(fed_funding_amount), Freq = n())), desc(Fed))
+
+#printing head
+rec %>% pander
+
+#barplot
+par(mar = c(7,6,3,3), mfrow=c(1,1))
+barplot(rec$Fed/1000000, names.arg = rec$recip_cat_type, las = 2, cex.names = .7, cex.axis = .7 , ylab = "in USD 1MLL", cex.lab = .8, col="#4979FF")
+
+#creating an object for a pie charts for the 5 mayor recipients
+pie.syr.rec <- rec
+
+```
+
+
+#Main Recipients of Fed $ in the cities
+
+##Syracuse
 ```{r}
 #Main recipients at syr
 options(scipen = 999)
@@ -121,28 +236,6 @@ pie.syr.rec <- pie
 ```
 
 ##Rochester
-
-```{r}
-#Subsetting Rochester
-x <- gra16$recipient_city_name %in% c("Rochester", "ROCHESTER")
-
-roc16 <- gra16[x,c("maj_agency_cat", "agency_name", "action_type",
-               "cfda_program_num", "cfda_program_title", "fed_funding_amount", "non_fed_funding_amount",
-               "total_funding_amount",	"asst_cat_type", "assistance_type", "record_type",
-               "fiscal_year", "principal_place_cc", "project_description", "recipient_name", 
-               "recipient_type", "recip_cat_type", "recipient_city_name", "recipient_county_name",
-               "recipient_state_code", "exec1_fullname", "exec1_amount")]
-
-#Only interested in pure Federal grants
-x <- roc16$non_fed_funding_amount == 0
-roc16 <- roc16[x,]
-
-#only interested in project grants
-x <- roc16$assistance_type == "04: Project grant"
-roc16 <- roc16[x,]
-```
-
-###Main Recipients
 ```{r}
 #Main recipients in ROCHESTER
 rec <- group_by(roc16, recipient_name)
@@ -166,8 +259,94 @@ pie[6,] <- c("OTHERS", sum(rec$Fed[6:length(rec$Fed)]), sum(rec$Freq[6:length(re
 pie$Fed <- as.numeric(pie$Fed)
 pie <- arrange(pie, desc(Fed))
 pie.roc.rec <- pie
+```
+
+##Ithaca
+```{r}
+#Main recipients in Ithaca
+rec <- group_by(ith16, recipient_name)
+rec <- arrange(as.data.frame(summarize(rec, Fed = sum(fed_funding_amount), Freq = n())), desc(Fed))
+
+#removing negatives
+x <- rec$Fed < 0 
+rec$Fed[x] <- 0
+rec <- arrange(rec, desc(Fed))
+
+#printing head
+head(rec) %>% pander
+
+#barplot
+par(mar = c(7,6,3,3), mfrow=c(1,1))
+barplot(rec$Fed/1000000, names.arg = rec$recipient_name, las = 2, cex.names = .7, cex.axis = .7 , ylab = "in USD 1MLL", cex.lab = .8)
+
+#creating an object for the pie chart of only 5 mayor recipients
+pie <- rec[1:5,]
+pie[6,] <- c("OTHERS", sum(rec$Fed[6:length(rec$Fed)]), sum(rec$Freq[6:length(rec$Fed)])) 
+pie$Fed <- as.numeric(pie$Fed)
+pie <- arrange(pie, desc(Fed))
+pie.ith.rec <- pie
 
 ```
+
+##Buffalo
+```{r}
+#Main recipients in BUFFALO
+rec <- group_by(buf16, recipient_name)
+rec <- arrange(as.data.frame(summarize(rec, Fed = sum(fed_funding_amount), Freq = n())), desc(Fed))
+
+#removing negatives
+x <- rec$Fed < 0 
+rec$Fed[x] <- 0
+rec <- arrange(rec, desc(Fed))
+
+#printing head
+head(rec) %>% pander
+
+#barplot
+par(mar = c(7,6,3,3), mfrow=c(1,1))
+barplot(rec$Fed/1000000, names.arg = rec$recipient_name, las = 2, cex.names = .7, cex.axis = .7 , ylab = "in USD 1MLL", cex.lab = .8)
+
+#creating an object for the pie chart of only 5 mayor recipients
+pie <- rec[1:5,]
+pie[6,] <- c("OTHERS", sum(rec$Fed[6:length(rec$Fed)]), sum(rec$Freq[6:length(rec$Fed)])) 
+pie$Fed <- as.numeric(pie$Fed)
+pie <- arrange(pie, desc(Fed))
+pie.buf.rec <- pie
+
+```
+
+##Albany
+```{r}
+#Main recipients in ALBANY
+rec <- group_by(alb16, recipient_name)
+rec <- arrange(as.data.frame(summarize(rec, Fed = sum(fed_funding_amount), Freq = n())), desc(Fed))
+
+#removing negatives
+x <- rec$Fed < 0 
+rec$Fed[x] <- 0
+rec <- arrange(rec, desc(Fed))
+
+#printing head
+head(rec) %>% pander
+
+#barplot
+par(mar = c(7,6,3,3), mfrow=c(1,1))
+barplot(rec$Fed/1000000, names.arg = rec$recipient_name, las = 2, cex.names = .7, cex.axis = .7 , ylab = "in USD 1MLL", cex.lab = .8)
+
+#creating an object for the pie chart of only 5 mayor recipients
+pie <- rec[1:5,]
+pie[6,] <- c("OTHERS", sum(rec$Fed[6:length(rec$Fed)]), sum(rec$Freq[6:length(rec$Fed)])) 
+pie$Fed <- as.numeric(pie$Fed)
+pie <- arrange(pie, desc(Fed))
+pie.alb.rec <- pie
+
+```
+
+
+Some insights:
+
+* Main recipients are universities
+* Albany is an outlier because it prob receives funds for the whole state.
 
 ##Comparing Top 5 Recipients in Syr and Roc
 
@@ -348,6 +527,18 @@ pie(as.numeric(pie$Fed), labels = paste0(pie$agency_name, "\n" , round(pie$Fed/s
 
 pie <- pie.roc.pro
 pie(as.numeric(pie$Fed), labels = paste0(pie$cfda_program_title, "\n" , round(pie$Fed/sum(pie$Fed)*100, digits=1), "%"), main = "Top 10 Programs of Fed $ in Rochester", cex= .7, col=col)
+
+```
+
+
+#Total Amount Received as compared to other cities
+
+
+```{r}
+unique(syr16$agency_name)
+unique(roc16$agency_name)
+
+
 
 ```
 

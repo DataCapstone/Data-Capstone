@@ -50,16 +50,116 @@ sort(unique(gra16$principal_place_state))
 sort(unique(gra16$recipient_state_code)) 
 #output is only NY, so the filter is by recipients place, which makes sense because if we are an IDA we should care about the recipient not the pop.
 
-sort(unique(gra16$recipient_city_name)) 
+head(sort(unique(gra16$recipient_city_name)))
 # "Syracuse" | "SYRACUSE"   
 # "Rochester" | "ROCHESTER"
 # "Albany" | "ALBANY"
 #  "Ithaca" | "ITHACA" 
 
-sort(unique(gra16$recipient_county_code))
-sort(unique(gra16$recipient_county_name))
-sort(unique(gra16$recipient_state_code))
+head(sort(unique(gra16$recipient_county_code)))
+head(sort(unique(gra16$recipient_county_name)))
+head(sort(unique(gra16$recipient_state_code)))
 ```
+
+Issue with consistency of the names
+===================================
+
+``` r
+#looking for consistency in the names of agencies / programs
+
+x <- gra16[, c("maj_agency_cat", "agency_name", "agency_code", "cfda_program_num", "cfda_program_title")]
+x$maj <- substr(x$maj_agency_cat, 1,2)
+x$cod <- substr(x$agency_code, 1,2)
+x$cfda <- substr(as.character(x$cfda_program_num), 1,2)
+
+#table(x$maj == x$cod) #only 4 inconsistencies between the first two numbers of agency maj and agency code.
+
+#table(x$maj == x$cfda) #only 43 times they are the same
+#and this is when:
+#x[x$maj == x$cfda,] #19 for department of state in both cfda codes and agency code
+
+length(unique(x$maj_agency_cat)) #24
+```
+
+    ## [1] 24
+
+``` r
+length(unique(x$maj)) #23
+```
+
+    ## [1] 23
+
+``` r
+length(unique(x$agency_code)) #83
+```
+
+    ## [1] 83
+
+``` r
+length(unique(x$cod)) #25
+```
+
+    ## [1] 25
+
+``` r
+length(unique(x$agency_name)) #67
+```
+
+    ## [1] 67
+
+``` r
+length(unique(x$cfda)) #24
+```
+
+    ## [1] 24
+
+``` r
+length(unique(x$cfda_program_num)) #782
+```
+
+    ## [1] 782
+
+looking at action type
+======================
+
+``` r
+#most common cfda
+
+head(arrange(as.data.frame(table(gra16$cfda_program_title)), desc(Freq)))
+```
+
+    ##                                                                         Var1
+    ## 1                                          Highway Planning and Construction
+    ## 2                                                                           
+    ## 3                                  Biomedical Research and Research Training
+    ## 4                           Allergy, Immunology and Transplantation Research
+    ## 5 Extramural Research Programs in the Neurosciences and Neurological Disorde
+    ## 6                                              Mental Health Research Grants
+    ##   Freq
+    ## 1 9792
+    ## 2 1088
+    ## 3  781
+    ## 4  582
+    ## 5  497
+    ## 6  495
+
+``` r
+x <- gra16$cfda_program_title == "Highway Planning and Construction"
+dat <- gra16[x,]
+
+#unique(gra16$action_type)
+#A: new assistance
+#B: continuation
+#C: Revision
+#D: Fnd adjustment
+
+dat$act_typ <- substr(dat$action_type, 1, 1) #making it only the first code letter
+head(arrange(as.data.frame(table(dat$act_typ)), desc(Freq)))
+```
+
+    ##   Var1 Freq
+    ## 1    C 8359
+    ## 2    A 1433
 
 **ASSISSTANCE**
 
@@ -111,7 +211,30 @@ sort(unique(gra16$recipient_state_code))
 -   57 exec1\_fullname character
 -   58 exec1\_amount numeric
 
+recip\_cat\_type and recipient\_type equivalencies
+==================================================
+
+-   g: Government -&gt; 00: State government
+-   g: Government -&gt; 02: City or township government
+-   g: Government -&gt; 01: County government
+-   g: Government -&gt; 04: Special district government
+-   g: Government -&gt; 05: Independent school district
+-   h: Government -&gt; 06: State controlled institution of higher education
+
+-   n: Nonprofit agencies -&gt; "12: Other nonprofit"
+-   n: Nonprofit agencies -&gt; "11: Indian tribe"
+
+-   h: Private agencies -&gt; 20: Private higher education
+-   f: Private agencies -&gt; 22: Profit organization
+-   f: Private agencies -&gt; 23: Small business
+-   i: Private agencies -&gt; 21: Individual
+-   o: Private agencies -&gt; 25: All other
+
 Questions
 =========
 
 1.  how to work with negatives?
+
+2.  when looking at the action type
+
+3.  Continuation (funding in succeeding budget period which stemmed from prior agreement to fund amount of the current action)" This means we are double counting money?
