@@ -18,7 +18,9 @@ enableJIT(3) # 0
 library( httr )
 library( jsonlite )
 
-################### General Purpose GET Function #####################################
+################### General Purpose GET Function ############################################
+### Courtesy of Professor Wilcoxen http://wilcoxen.maxwell.insightworks.com/pages/44.html ###
+#############################################################################################
 GET_all_pages <- function( PATH, QUERY ) {
   # Create empty list
   pages <- list()
