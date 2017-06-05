@@ -19,7 +19,6 @@ library( httr )
 library( jsonlite )
 
 ################### General Purpose GET Function ############################################
-### Courtesy of Professor Wilcoxen http://wilcoxen.maxwell.insightworks.com/pages/44.html ###
 #############################################################################################
 GET_all_pages <- function( PATH, QUERY ) {
   # Create empty list
@@ -162,3 +161,6 @@ il.06 <- con_district_state("06", "ILLINOIS")
 dim(il.06) # 171 by 74
 mo.02 <- con_district_state("02", "MISSOURI")
 dim(mo.02) # 148 by 74
+####
+#### Thanks to Professor Peter Wilcoxen for his ability to push and inpsire me to use my technical skills for social good.
+####
