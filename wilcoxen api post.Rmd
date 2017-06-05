@@ -1,0 +1,101 @@
+---
+title: "post"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(httr)
+library(jsonlite)
+
+url <- "https://api.usaspending.gov/api/v1/awards/"
+
+filter <- "{
+    \"filters\":
+    [
+       {
+       \"field\": \"recipient__location__city_name\",
+       \"operation\": \"in\",
+       \"value\": [\"SYRACUSE\",\"ALBANY\"]
+       },
+       {
+       \"field\": \"recipient__location__state_code\",
+        \"operation\": \"equals\",
+        \"value\": \"NY\"
+        }
+    ]
+}"
+
+#response <- httr::POST(url=url,body=filter,httr::content_type_json())
+#contents <- httr::content(response,as="text",encoding="UTF-8")
+#parsed   <- jsonlite::fromJSON(contents)
+#results  <- parsed$results
+
+response <- POST(url=url,body=filter, content_type_json())
+contents <- content(response,as="text",encoding="UTF-8")
+parsed   <- fromJSON(contents)
+results  <- parsed$results
+
+```
+
+```{r}
+
+url_awards <- "https://api.usaspending.gov/api/v1/awards/"
+
+filter_awards <- '{
+   "verbose": true,
+   "filters": 
+   [ 
+      { 
+      "field": "recipient__location__city_name", 
+      "operation": "in",
+      "value": ["SYRACUSE","ALBANY"] 
+      }, 
+      { 
+      "field": "recipient__location__state_code", 
+      "operation": "equals",
+      "value": "NY"
+       } 
+   ],
+   "limit" : "5"
+}'
+
+filter_awards2 <- '{
+   "fields" : ["latest_transaction__place_of_performance__county_name","recipient__location__county_code"],
+   "limit" : "5"
+}'
+
+filter_awards3 <- '{
+   "fields" : ["id","latest_transaction__place_of_performance__county_name","recipient__location__county_code"],
+   "filters": 
+   [ 
+      { 
+      "field": "recipient__location__county_name", 
+      "operation": "in",
+      "value": ["ONONDAGA","MADISON"] 
+      }, 
+      { 
+      "field": "recipient__location__state_code", 
+      "operation": "equals",
+      "value": "NY"
+       } 
+   ],
+   "limit" : "5"
+}'
+
+url_trans <- "https://api.usaspending.gov/api/v1/transactions/"
+
+filter_trans <- '{
+   "limit":"2", "verbose": true
+}'
+
+response <- httr::POST(url=url_awards,body=filter_awards3,httr::content_type_json(),httr::verbose())
+contents <- httr::content(response,as="text",encoding="UTF-8")
+parsed   <- jsonlite::fromJSON(contents)
+results  <- parsed$results
+
+results
+
+```
+
