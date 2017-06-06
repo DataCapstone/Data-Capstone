@@ -1,0 +1,51 @@
+---
+title: "NY county table"
+author: "Linnea Powell"
+date: "June 6, 2017"
+output: html_document
+runtime: shiny
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(shiny)
+library(dplyr)
+```
+
+
+## Inputs and Outputs
+
+```{r}
+# read in rds file with total and per capita funding by county
+rds_url <- "https://github.com/DataCapstone/Data-Capstone/blob/master/Counties.plot.funding.aggregated.rds?raw=true"
+
+counties.aggfunding.df <- readRDS( gzcon(url( rds_url ) ) )
+```
+
+```{r}
+# Select and rename columns to display
+
+counties.table<-select(counties.aggfunding.df , county_name, federal_funding, funding_per_capita)
+
+colnames(counties.table) <- c("County","Total Federal Grant Funding", "Per Capita Federal Grant Funding")
+```
+
+```{r}
+
+runApp(list(
+  ui = basicPage(
+    h2('Federal Grant Funding Amounts by County, FY 2016'),
+    dataTableOutput('mytable')
+  ),
+  server = function(input, output) {
+    output$mytable = renderDataTable({
+      counties.table
+    })
+  }
+))
+```
+
+
