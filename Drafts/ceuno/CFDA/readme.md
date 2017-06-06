@@ -2,6 +2,6 @@
 
 ## This folder contains code to help navigate the CFDA
 
-I hope people find this helpful! - Cristian
+Click here for an [Interactive data table](http://rpubs.com/cenuno/cfda_draft) example.
 
-*Last updated on June 3, 2017*
+*Last updated on June 6, 2017*
