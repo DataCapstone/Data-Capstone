@@ -58,13 +58,14 @@ renderPrint({
               i = 1 
               df <- data.frame()
               while (i <= length(input$your_county)){
-              print(i)
-              print(input$your_county[i])
-              as.upny.2 <- filter(as.upny , county == input$your_county[i] )
-              as.group <- group_by(as.upny.2 , county)
-              as.fund <- summarise(as.group , fund = sum(fed_funding_amount))
-              as.fund.2 <- as.data.frame(as.fund)
-              print(as.fund.2)
+              #print(i)
+              print(class(input$your_county))
+              print((input$your_county[1]))
+              #as.upny.2 <- filter(as.upny , county == input$your_county[i] )
+              #as.group <- group_by(as.upny.2 , county)
+              #as.fund <- summarise(as.group , fund = sum(fed_funding_amount))
+              #as.fund.2 <- as.data.frame(as.fund)
+              #print(as.fund.2)
               i = i + 1}
 })
 
@@ -90,44 +91,47 @@ renderPrint({
 
 ```{r}
 
-renderPrint({ 
-              as.upny.2 <- filter(as.upny , county == input$your_county[1] )
+#par(mfrow = c(2, 3), oma=c(3, 3, 3, 3))
+
+renderPlotly({ 
+              as.upny.2 <- filter(as.upny , county == (input$your_county[1]) )
+              print(head(as.upny.2))
               as.group <- group_by(as.upny.2 , county)
               as.fund <- summarise(as.group , fund = sum(fed_funding_amount))
               as.fund.2 <- as.data.frame(as.fund)
-              plot_ly(x=df$county, y=df$fund, type= "bar")
+              plot_ly(x=as.fund.2$county, y=as.fund.2$fund, type= "bar")
 })
 
-renderPrint({ 
+renderPlotly({ 
               as.upny.2 <- filter(as.upny , county == input$your_county[2] )
               as.group <- group_by(as.upny.2 , county)
               as.fund <- summarise(as.group , fund = sum(fed_funding_amount))
               as.fund.2 <- as.data.frame(as.fund)
-              plot_ly(x=df$county, y=df$fund, type= "bar")
+              plot_ly(x=as.fund.2$county, y=as.fund.2$fund, type= "bar")
 })
 
-renderPrint({ 
+renderPlotly({ 
               as.upny.2 <- filter(as.upny , county == input$your_county[3] )
               as.group <- group_by(as.upny.2 , county)
               as.fund <- summarise(as.group , fund = sum(fed_funding_amount))
               as.fund.2 <- as.data.frame(as.fund)
-              plot_ly(x=df$county, y=df$fund, type= "bar")
+              plot_ly(x=as.fund.2$county, y=as.fund.2$fund, type= "bar")
 })
 
-renderPrint({ 
+renderPlotly({ 
               as.upny.2 <- filter(as.upny , county == input$your_county[4] )
               as.group <- group_by(as.upny.2 , county)
               as.fund <- summarise(as.group , fund = sum(fed_funding_amount))
               as.fund.2 <- as.data.frame(as.fund)
-              plot_ly(x=df$county, y=df$fund, type= "bar")
+              plot_ly(x=as.fund.2$county, y=as.fund.2$fund, type= "bar")
 })
 
-renderPrint({ 
+renderPlotly({ 
               as.upny.2 <- filter(as.upny , county == input$your_county[5] )
               as.group <- group_by(as.upny.2 , county)
               as.fund <- summarise(as.group , fund = sum(fed_funding_amount))
               as.fund.2 <- as.data.frame(as.fund)
-              plot_ly(x=df$county, y=df$fund, type= "bar")
+              plot_ly(x=as.fund.2$county, y=as.fund.2$fund, type= "bar")
 })
 
 ```
