@@ -88,10 +88,17 @@ ny_map <- leaflet(ny_counties) %>%
                     , options = layersControlOptions(collapsed = FALSE)
                     ) %>%
   # Make sure people know what the color values indicate
-  addLegend("bottomleft"
+  addLegend("bottomright"
             , pal = pal_pc # use the same color palette we made earlier
             , values = ny_counties$funding_per_capita # assign values to the legend
             , title = "Per Capita  Total FY16 Federal Grant by County (without State Gov't as a Recipient)"
+            , labFormat = labelFormat(prefix = "$")
+            , opacity = 1
+  ) %>%
+  addLegend("bottomleft"
+            , pal = pal # use the same color palette we made earlier
+            , values = ny_counties$federal_funding # assign values to the legend
+            , title = "Total FY16 Federal Grant by County (without State Gov't as a Recipient)"
             , labFormat = labelFormat(prefix = "$")
             , opacity = 1
   ) %>%
