@@ -1,0 +1,366 @@
+---
+title: "donuts yummy"
+output: github_document
+html_document:
+  df_print: paged
+  keep_md: true
+  code_fold: hide
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set( echo = F, message=F, warning=F, fig.width = 10, fig.height = 10 )
+library(dplyr)
+library(pander)
+library(ggplot2)
+
+########################
+#grants DF
+
+gra16 <- readRDS( gzcon(url("https://github.com/DataCapstone/Data-Capstone/blob/master/Raw-Data/NYgra16.rds?raw=true")))
+
+graTOTAL <- gra16
+
+#processing the DF
+
+#Removing state grants
+
+x <- gra16$recipient_type == "00: State government"
+#table(x)
+#FALSE  TRUE 
+#18695 11801
+gra16 <- gra16[!x,]
+
+options(scipen = 999)
+```
+
+
+Should this be per capita too?
+Should we collapse recip_cat_types? 
+
+
+#USING PIE FUNCTION
+
+##Main Federal Funding Agencies in NY
+
+```{r}
+#Possible variables:
+#unique(gra16$maj_agency_cat) #27 levels
+#unique(gra16$agency_name) #72 levels
+#unique(gra16$agency_code) #95 levels
+
+#grouping by Agencies (maj_agency_cat)
+age <- group_by(gra16, maj_agency_cat)
+age <- arrange(as.data.frame(summarize(age, Fed = sum(fed_funding_amount), Freq = n())), desc(Fed))
+
+#grouping by Age TOTAL
+ageT <- group_by(graTOTAL, maj_agency_cat)
+ageT <- arrange(as.data.frame(summarize(ageT, Fed = sum(fed_funding_amount), Freq = n())), desc(Fed))
+
+#barplot
+par(mar = c(10,6,3,3), mfrow=c(1,2))
+dat <- age
+barplot(dat$Fed/1000000, names.arg = dat$maj_agency_cat, las = 2, cex.names = .7, cex.axis = .7 , ylab = "in USD 1MLL", cex.lab = .8, col="#4979FF", main= "Main Federal Funding Agencies in NY")
+dat <- ageT
+barplot(dat$Fed/1000000, names.arg = dat$maj_agency_cat, las = 2, cex.names = .7, cex.axis = .7 , ylab = "in USD 1MLL", cex.lab = .8, col="#4979FF", main = "Including State government")
+
+#####pie charts!########
+
+#making an others category
+dat <- age
+pie <- dat[1:5,]
+pie[6,] <- c("OTHERS", sum(dat$Fed[6:length(dat$Fed)]), sum(dat$Freq[6:length(dat$Fed)])) 
+pie$Fed <- as.numeric(pie$Fed)
+pie <- arrange(pie, desc(Fed))
+
+#making an others category TOTAL
+dat <- ageT
+pieT <- dat[1:5,]
+pieT[6,] <- c("OTHERS", sum(dat$Fed[6:length(dat$Fed)]), sum(dat$Freq[6:length(dat$Fed)])) 
+pieT$Fed <- as.numeric(pieT$Fed)
+pieT <- arrange(pieT, desc(Fed))
+
+#colors
+col <- c("#4979FF", "#FF9858",  "#8DFFFF", "#FF84FF", "#55D473", "#FFFF78", "grey80")
+
+#plotting pies
+plot.new()
+par(mfrow = c(1,2), mar=c(1,1,1,1))
+pie <- pie
+pie(as.numeric(pie$Fed), labels = paste0(pie$maj_agency_cat, "\n" , round(pie$Fed/sum(pie$Fed)*100, digits=1), "%"), main = "Main Federal Funding Agencies in NY", cex= .7, col=col)
+
+pie<- pieT
+pie(as.numeric(pie$Fed), labels = paste0(pie$maj_agency_cat, "\n" , round(pie$Fed/sum(pie$Fed)*100, digits=1), "%"), main = "Including State Government", cex= .7, col=col)
+
+```
+
+
+##Federal Funding by Recipient Types (recip_cat_type)
+
+```{r}
+
+#possible variables:
+#unique(gra16$recip_cat_type) #12 levels
+#unique(gra16$recipient_type) #7 levels
+
+#grouping by recipients 
+rec <- group_by(gra16, recip_cat_type)
+rec <- arrange(as.data.frame(summarize(rec, Fed = sum(fed_funding_amount), Freq = n())), desc(Fed))
+
+#grouping by recipients TOTAL
+recT <- group_by(graTOTAL, recip_cat_type)
+recT <- arrange(as.data.frame(summarize(recT, Fed = sum(fed_funding_amount), Freq = n())), desc(Fed))
+
+#barplot
+par(mar = c(7,6,3,3), mfrow=c(1,2))
+
+barplot(rec$Fed/1000000, names.arg = rec$recip_cat_type, las = 2, cex.names = .7, cex.axis = .7 , ylab = "in USD 1MLL", cex.lab = .8, col="#4979FF", main= "Federal Funding by Recipient Types")
+
+barplot(recT$Fed/1000000, names.arg = recT$recip_cat_type, las = 2, cex.names = .7, cex.axis = .7 , ylab = "in USD 1MLL", cex.lab = .8, col="#4979FF", main = "Including State government")
+
+
+#pie chart!
+col <- c("#4979FF", "#FF9858",  "#8DFFFF", "#FF84FF", "#55D473", "#FFFF78", "grey80")
+
+plot.new()
+par(mfrow = c(1,2), mar=c(1,1,1,1))
+pie <- rec
+pie(as.numeric(pie$Fed), labels = paste0(pie$recip_cat_type, "\n" , round(pie$Fed/sum(pie$Fed)*100, digits=1), "%"), main = "Federal Funding by Recipient Types", cex= .7, col=col)
+
+pie<- recT
+pie(as.numeric(pie$Fed), labels = paste0(pie$recipient_name, "\n" , round(pie$Fed/sum(pie$Fed)*100, digits=1), "%"), main = "Including State Government", cex= .7, col=col)
+
+```
+
+#USING GGPLOT
+
+##Main Federal Funding Agencies in NY (maj_agency_cat)
+
+```{r}
+#making dataset 
+dat <- group_by(gra16, maj_agency_cat)
+dat <- arrange(as.data.frame(summarize(dat, Fed = sum(fed_funding_amount))), desc(Fed))
+
+#making an others category
+dat[6,] <- c("Others", sum(dat$Fed[6:length(dat$Fed)])) 
+dat <- dat[c(1:6),]
+dat$Fed <- as.numeric(dat$Fed)
+dat <- arrange(dat, desc(Fed))
+
+#variables needed for donut in ggplot2
+dat$fraction <- dat$Fed / sum(dat$Fed)
+dat$ymax <- cumsum(dat$fraction)
+dat$ymin <- c(0, head(dat$ymax, n=-1)) #-1 means all but number 1. is the compliment
+dat$mid <- dat$ymin + (dat$ymax - dat$ymin)/2
+
+
+
+# Make the plot
+pie <- ggplot(dat,
+              aes(fill=maj_agency_cat,
+                  xmax=3, xmin=2, #only one bar from 3 to 4 in the x axis.
+                  ymax=ymax, ymin=ymin)) +  #look at the df and see these values represent the stacks.
+  xlim(c(0, 4)) + #sets the x limints, which in this case is the radius
+  geom_rect(colour="white", #makes the border of the rectangles white.
+            size = 1.5) + #size of the border
+  coord_polar(theta="y") + #makes the bars start at 12 o clock vertically and then bars grow cirularly, like a race track.
+  geom_text(aes(x= 2.5, y = mid, label = paste0(round(fraction*100, digits = 1),"%")),
+            size=4,
+            fontface = "bold",
+            hjust = .5,
+            vjust = .5,
+            colour = "white") +
+  ggtitle(label="Main Federal Funding Agencies in NY") +
+  theme_bw() + #eliminates the background
+  theme(panel.grid=element_blank(), #eliminates the grid.
+        axis.text=element_blank(), #eliminates the text of axis. note that the x axis is the radius from the center to 12 o clock and that y axis is the whole cirumference, starting at 12 o clock.
+        axis.ticks=element_blank(),
+        axis.title = element_blank(),
+        panel.border = element_blank(),
+        plot.margin = margin(0,0,0,0, "cm"),
+        legend.margin = margin(0,0,0,0, "cm"),
+        legend.title = element_blank(),
+        legend.position = "right",
+        legend.text = element_text(colour = "grey40", size = 8))
+  #annotate("text", x = 0, y = 0, label = "We can add text here") #in the middle of the chart a text.
+
+pie
+
+
+
+```
+
+##Federal Funding by Recipient Type in NY (recip_cat_type)
+
+```{r}
+#dounut function
+colorss <- c("#4979FF", "#FF9858",  "#8DFFFF", "#FF84FF", "#55D473", "#FFFF78", "grey80")
+
+dat <- group_by(gra16, recip_cat_type)
+dat <- arrange(as.data.frame(summarize(dat, Fed = sum(fed_funding_amount))), desc(Fed))
+dat$fraction <- dat$Fed / sum(dat$Fed)
+dat$ymax <- cumsum(dat$fraction)
+dat$ymin <- c(0, head(dat$ymax, n=-1)) #-1 means all but number 1. is the compliment
+dat$mid <- dat$ymin + (dat$ymax - dat$ymin)/2
+
+# Make the plot
+pie <- ggplot(dat,
+              aes(fill=recip_cat_type,
+                  xmax=3, xmin=2, #only one bar from 3 to 4 in the x axis.
+                  ymax=ymax, ymin=ymin)) +  #look at the df and see these values represent the stacks.
+  xlim(c(0, 4)) + #sets the x limints, which in this case is the radius
+  geom_rect(colour="white", #makes the border of the rectangles white.
+            size = 1.5) + #size of the border
+  coord_polar(theta="y") + #makes the bars start at 12 o clock vertically and then bars grow cirularly, like a race track.
+  geom_text(aes(x= 2.5, y = mid, label = paste0(round(fraction*100, digits = 1),"%")),
+            size=4,
+            fontface = "bold",
+            hjust = .5,
+            vjust = .5,
+            colour = "white") +
+  ggtitle(label="Federal Funding by Recipient type in NY") +
+  theme_bw() + #eliminates the background
+  theme(panel.grid=element_blank(), #eliminates the grid.
+        axis.text=element_blank(), #eliminates the text of axis. note that the x axis is the radius from the center to 12 o clock and that y axis is the whole cirumference, starting at 12 o clock.
+        axis.ticks=element_blank(),
+        axis.title = element_blank(),
+        panel.border = element_blank(),
+        plot.margin = margin(0,0,0,0, "cm"),
+        legend.margin = margin(0,0,0,0, "cm"),
+        legend.title = element_blank(),
+        legend.position = "right",
+        legend.text = element_text(colour = "grey40", size = 8))
+  #annotate("text", x = 0, y = 0, label = "We can add text here") #in the middle of the chart a text.
+
+pie
+
+
+
+```
+
+#Other stuff
+
+```{r, eval= F}
+
+dou(x=dat$Fed, labels= dat$recip_cat_type) 
+
+dou <-
+function (x, labels = names(x), edges = 200, outer.radius = 0.8, 
+          inner.radius=0.6, clockwise = FALSE,
+          init.angle = if (clockwise) 90 else 0, density = NULL, 
+          angle = 45, col = NULL, border = FALSE, lty = NULL, 
+          main = NULL, ...)
+{
+    if (!is.numeric(x) || any(is.na(x) | x < 0))
+        stop("'x' values must be positive.")
+    if (is.null(labels))
+        labels <- as.character(seq_along(x))
+    else labels <- as.graphicsAnnot(labels)
+    x <- c(0, cumsum(x)/sum(x))
+    dx <- diff(x)
+    nx <- length(dx)
+    plot.new()
+    pin <- par("pin")
+    xlim <- ylim <- c(-1, 1)
+    if (pin[1L] > pin[2L])
+        xlim <- (pin[1L]/pin[2L]) * xlim
+    else ylim <- (pin[2L]/pin[1L]) * ylim
+    plot.window(xlim, ylim, "", asp = 1)
+    if (is.null(col))
+        col <- if (is.null(density))
+          palette()
+        else par("fg")
+    col <- rep(col, length.out = nx)
+    border <- rep(border, length.out = nx)
+    lty <- rep(lty, length.out = nx)
+    angle <- rep(angle, length.out = nx)
+    density <- rep(density, length.out = nx)
+    twopi <- if (clockwise)
+        -2 * pi
+    else 2 * pi
+    t2xy <- function(t, radius) {
+        t2p <- twopi * t + init.angle * pi/180
+        list(x = radius * cos(t2p), 
+             y = radius * sin(t2p))
+    }
+    for (i in 1L:nx) {
+        n <- max(2, floor(edges * dx[i]))
+        P <- t2xy(seq.int(x[i], x[i + 1], length.out = n),
+                  outer.radius)
+        polygon(c(P$x, 0), c(P$y, 0), density = density[i], 
+                angle = angle[i], border = border[i], 
+                col = col[i], lty = lty[i])
+        Pout <- t2xy(mean(x[i + 0:1]), outer.radius)
+        lab <- as.character(labels[i])
+        if (!is.na(lab) && nzchar(lab)) {
+            lines(c(1, 1.05) * Pout$x, c(1, 1.05) * Pout$y)
+            text(1.1 * Pout$x, 1.1 * Pout$y, labels[i], 
+                 xpd = TRUE, adj = ifelse(Pout$x < 0, 1, 0), 
+                 ...)
+        }
+        ## Add white disc          
+        Pin <- t2xy(seq.int(0, 1, length.out = n*nx),
+                  inner.radius)
+        polygon(Pin$x, Pin$y, density = density[i], 
+                angle = angle[i], border = border[i], 
+                col = "white", lty = lty[i])
+    }
+
+    title(main = main, ...)
+    invisible(NULL)
+}
+
+
+
+######################################
+
+#understanding how ggplot plots as a matrix
+#ggplot has a automatic grid. x and y are positions, z is a vector for color. 
+
+
+df <- data.frame(
+  x = c(1,1,3,4,5,1), #three 1 values in X, therefore 4 grid squares drawn, look at their z value to know.
+  y = c(2,1,4,1,1,4),
+  z = c(1,2,3,1,2,3)
+)
+
+ggplot(df, aes(x, y)) +
+  geom_tile(aes(fill = z))
+
+df <- data.frame(
+  x = c(1:6), #three 1 values in X, therefore 4 grid squares drawn, look at their z value to know.
+  y = c(1:6),
+  z = c(1:6)
+)
+
+#GEOM TILE
+ggplot(df, aes(x, y)) +
+  geom_tile(aes(fill = z)) #tile puts a "tile" on the y number. Here it is writting at 25 a tile, then another ontop on 25 value, and then one at 50.
+#this behaves like points.
+
+#GEOM BAR
+ggplot(df, aes(x=x, y=y, fill=z)) +
+  geom_bar(width = 1, stat = "identity")
+#this behaves more like a bar chart
+
+#GEOM RECT
+#this one need y and x max and min. and it draws rectangles!
+df <- data.frame(
+  xmax = c(1:6), #three 1 values in X, therefore 4 grid squares drawn, look at their z value to know.
+  xmin = c(2:7),
+  ymax = c(1:6),
+  ymin = c(1,1),
+  z = c(1:2)
+)
+
+ggplot(df) +
+  geom_rect(aes(fill = z, ymax=ymax, ymin=ymin, 
+                  xmax=xmax, xmin=xmin), colour=c("white")) +
+
+#now if we include the function coord_polar, we can see that the x axis starts at 12 o clock vertically and then bars grow cirularly, like a race track. y being the size of the degree of that circular growth.
+
+ggplot(df) +
+  geom_rect(aes(fill = z, ymax=ymax, ymin=ymin, 
+                  xmax=xmax, xmin=xmin), colour=c("white")) +
+   coord_polar(theta="y")
+```
+

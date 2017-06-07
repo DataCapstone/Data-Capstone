@@ -2,11 +2,11 @@ Matching Cities
 ================
 
 ``` r
-#coloring the state of NY by population
-par(mar = c(7,6,3,3), mfrow=c(1,1))
+#Using the census data we can visualize the Population of NY state by county. 
 
+par(mar = c(7,6,3,3), mfrow=c(1,1))
 dat <- arrange(dat, desc(Pop))
-barplot(dat$Pop/1000, names.arg = dat$county.name, las = 2, cex.names = .7, cex.axis = .7 , ylab = "in 1000 USD", cex.lab = .8, col="#4979FF")
+barplot(dat$Pop/1000, names.arg = dat$county.name, las = 2, cex.names = .7, cex.axis = .7 , ylab = "in 1000 USD", cex.lab = .8, col="dodgerblue4")
 ```
 
 ![](Matching_files/figure-markdown_github/unnamed-chunk-1-1.png)
@@ -16,10 +16,11 @@ barplot(dat$Pop/1000, names.arg = dat$county.name, las = 2, cex.names = .7, cex.
 colors <- colorRampPalette( c("white", "light grey","dodgerblue4")) #this makes a function called "col"
 colors <- colors( 7 ) # using the function we input the arg for the number of colors in that continium. And then saving the output as col too.
 
-#dividing the ranked data into groups and adding color
+#dividing the ranked data into groups and adding color as a label. 
 col <- cut(rank(dat$Pop), breaks=7, labels=colors)
-col <- as.character(col)
+col <- as.character(col) #the result is a list corresponding to the county but with the pop color.
 
+#making the label for our legend.
 #brakets <- seq(from=1, to = max(dat$Pop), by = max(dat$Pop)/7)
 #1.0  370752.3  741503.6 1112254.9 1483006.1 1853757.4 2224508.7
 brakets <- c("< 371k", "371k - 741k", "741k - 1.1m", "1.1m - 1.5m", "1.5m - 1.8m", "1.8m - 2.3m")

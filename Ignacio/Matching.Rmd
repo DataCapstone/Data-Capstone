@@ -14,19 +14,13 @@ library(dplyr)
 library(pander)
 library(geojsonio)
 library(sp) #need this to read the json shapes in gplot
+#install.packages("MatchIt")
+library(MatchIt)
 
 setwd("C:/Users/icps/Dropbox/3. Maxwell/4. Capston")
 
-#Loading DATASETS
+#########################Loading DATASETS########################
 
-#CONTRACTS DF
-cnt <- read.csv("./Data/NYcon2017.csv", stringsAsFactors = F)
-#making naics code two digit
-cnt$NAICS.code <- as.integer(substring(cnt$principalnaicscode, 1,2))
-#adding the name variable
-naics <- read.csv("./Data/NAICS_cat.csv")
-x <- match(cnt$NAICS.code, naics$X2017.NAICS.Code)
-cnt$NAICS.name <- as.character(naics$X2017.NAICS.Title[x])
 
 #CENSUS DF
 
@@ -38,61 +32,83 @@ dat <- getCensus(name="acs5", vintage=2015, key=censuskey,
 colnames(dat)[3:11] <- c("Pop", "MHincome", "White", "Black", "Asian", "Hispanic", "Unemployed", "Poverty", "Labor")
 
 #creating a county.name variable
-cou <- read.csv("./Data/countycodesNY.csv", stringsAsFactors = F)
+
+#getting a DF with the names of the counties and codes.
+cou <- read.csv("https://raw.githubusercontent.com/DataCapstone/Data-Capstone/master/Raw-Data/countycodesNY.csv", stringsAsFactors = F)
 dat$county.name <- as.factor(dat$county)
 levels(dat$county.name) <- as.character(cou$Name)
-#ordering
-dat <- dat[,c(1:2,12,3:11)]
-#another way to do it using the match function:
+#I used levels to standardize the names, but another way to do this could be using the match function:
 #order <- match(as.numeric(dat$county), cou$Fips)
 
+#ordering the DF
+dem <- dat[,c(1:2,12,3:11)]
 
-########################
+#making rates
+#colnames(dem)
+dem$pov <- dem$Poverty/dem$Pop
+dem$une <- dem$Unemployed/dem$Labor
 
-#Loading a geojson file for NY counties
-shapes <- geojson_read("https://raw.githubusercontent.com/DataCapstone/Data-Capstone/master/NY_counties.geojson", method="local", what="sp" )
-#standardizing the county name in the shapes@data$name
-levels(shapes@data$name) <- levels(dat$county.name)
+dem$whi <- dem$White/dem$Pop
+dem$bla <- dem$Black/dem$Pop
+dem$asi <- dem$Asian/dem$Pop
+dem$his <- dem$Hispanic/dem$Pop
+
+
+#saveRDS(dem, file = "NYcensus.rds")
+
+############Grants DF##########
+
+gra16 <- readRDS( gzcon(url("https://github.com/DataCapstone/Data-Capstone/blob/master/Raw-Data/NYgra16.rds?raw=true")))
+
 
 ```
+
+#Some definitions
+* A covariate is a variable that is possibly predictive of the outcome under study. A covariate may be of direct interest or it may be a confounding or interacting variable.
 
 ```{r}
-#coloring the state of NY by population
-par(mar = c(7,6,3,3), mfrow=c(1,1))
 
-dat <- arrange(dat, desc(Pop))
-barplot(dat$Pop/1000, names.arg = dat$county.name, las = 2, cex.names = .7, cex.axis = .7 , ylab = "in 1000 USD", cex.lab = .8, col="#4979FF")
+#################################################
 
-#Generating a color pallette
-colors <- colorRampPalette( c("white", "light grey","dodgerblue4")) #this makes a function called "col"
-colors <- colors( 7 ) # using the function we input the arg for the number of colors in that continium. And then saving the output as col too.
 
-#dividing the ranked data into groups and adding color
-col <- cut(rank(dat$Pop), breaks=7, labels=colors)
-col <- as.character(col)
+#data for the loop
+dat <- dem
 
-#brakets <- seq(from=1, to = max(dat$Pop), by = max(dat$Pop)/7)
-#1.0  370752.3  741503.6 1112254.9 1483006.1 1853757.4 2224508.7
-brakets <- c("< 371k", "371k - 741k", "741k - 1.1m", "1.1m - 1.5m", "1.5m - 1.8m", "1.8m - 2.3m")
+#flagging Onondaga with the v Treat
+county <- "Broome"
+x <- dat$county.name == county
+dat$Treat <- 0
+dat$Treat[x] <- 1
 
-#plotting the graph
-par(mar= c(0,1,1,1))
-plot(shapes, main="County Population in New York State",
-    axes = F,
-    cex.axis=.8,
-    col=col 
-    )
+#creating objects
+mat.list <- rep(NA,5)
+dis <- rep(FALSE, 62)
 
-#plotting the legend
-legend("right", bg="white"
-        , cex=0.8
-        , legend= rev(brakets)
-        , fill=rev(colors)
-        , box.col="white"
-        , title="Population" 
-        )
+#pop density
+for (i in c(1:5)) {
+  mat <- matchit(Treat ~  Pop + MHincome + pov, data = dat, discard = dis)
+  x <- as.numeric(mat$match.matrix)
+  dis[x] <- TRUE
+  mat.list[i] <- x
+  }
+x <- paste(1:5, ".", as.character(dat$county.name[mat.list]), ", ", sep = "", collapse = "")
+x <- substr(x,1,nchar(x)-2)
+x <- paste0("Matches for ", county, ": ", x)
+print(x)
+
+#to add to this:
+#t test to show covarietes.
+#confidence interval and diagram to show how different it is.
+
+
+
+
+
 
 
 
 ```
+
+
+
 
