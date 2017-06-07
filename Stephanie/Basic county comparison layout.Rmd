@@ -1,0 +1,148 @@
+---
+title: "dd ny shiny"
+runtime: shiny
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(dplyr)
+library(shiny)
+library(plotly)
+library(pander)
+library(reshape2)
+library(censusapi)
+
+```
+
+```{r, echo=T, fig.width=5, fig.height=5}
+
+# Load federal spending data, data frame of county codes
+gra16.named <- readRDS(gzcon(url("https://github.com/DataCapstone/Data-Capstone/blob/master/Raw-Data/NYgra16_counties_named.rds?raw=true")))
+
+codes <- read.csv("https://raw.githubusercontent.com/DataCapstone/Data-Capstone/master/Raw-Data/countycodesNY.csv")
+
+
+#Load population data from census for per capita calculations
+censuskey <- "cc0582f55dc6c9f75f5ea92824c86e0ae5d0d5d8"
+
+population.dat <- getCensus(name="acs5", vintage=2015, key=censuskey, 
+                       vars=c("B01001_001E"), region="county:*", regionin = "state: 36")
+
+colnames(population.dat) <- c("state","county_code", "population")
+
+population.dat$county_code <- as.numeric(as.character(population.dat$county_code))
+
+
+# Clean the data: take out funding to whole state, choose columns
+gra16.without.state <- filter(gra16.named , recipient_type != "00: State government")
+
+gra16.2 <- mutate(gra16.without.state, agency_name2 = as.character(agency_name), county = as.character(Name))
+
+gra16.3 <- gra16.2[ c("recipient_name" , "recipient_county_code", "county" , "recipient_type" , "fed_funding_amount" , "assistance_type" , "cfda_program_title" , "agency_name2" ) ]
+
+
+# Merge population and federal spending data
+population.dat.2 <- merge(population.dat , codes, by.x = "county_code", by.y = "Fips")
+
+# State wide average aggregated by assistance type. Add in per capita and NY Average indicator
+ny.grp  <- group_by(gra16.3, assistance_type ) 
+  
+ny.sumer <- summarise(ny.grp, fund = sum(fed_funding_amount))
+  
+ny.av.df <- as.data.frame( ny.sumer ) 
+
+ny.av.per <- mutate(ny.av.df , percap = fund / (sum(population.dat$population)))
+
+ny.av.per.2 <- mutate(ny.av.per , county = "NY Average")
+
+
+# Shiny input, county comparison
+selectizeInput( inputId='your_county', 
+            label='Spending per capita', 
+            choices= sort(unique(gra16.3$county)),
+            selected=c("Onondaga") , 
+            multiple = TRUE, 
+            options = list(maxItems = 5)
+            )
+
+
+# Shiny output 1: bar plot with of federal funding per capita, includes NY Average. Creates a stacked bar plot of project grants per capita and other grants per capita
+renderPlotly ({
+
+gra16.4 <- filter(gra16.3 , county %in% input$your_county )
+
+gra16.grp <- group_by(gra16.4 , county , assistance_type)
+
+gra16.sumer <- summarise(gra16.grp, fund = sum(fed_funding_amount))
+
+gra16.df <- as.data.frame(gra16.sumer)
+
+pop.filtered <- filter(population.dat.2 , Name %in% input$your_county )
+
+gra16.per <- merge(gra16.df , pop.filtered, by.x = "county", by.y = "Name")
+
+gra16.per.2 <- mutate(gra16.per , percap =  fund / population )
+
+gra16.per.3 <- gra16.per.2[c("assistance_type", "fund", "percap", "county")]
+
+gra16.per.4 <- rbind(gra16.per.3 , ny.av.per.2)
+
+gra16.per.5 <- mutate(gra16.per.4 , assistance_type.2 = ifelse( assistance_type == "04: Project grant", "Project Grants" , "Other Grants" ) )
+
+#cols <- c("#00CCFF", "#66CCFF", "#3366CC","#3333FF")
+
+cols <- c("#00CCFF","#3333FF")
+
+ggplot(gra16.per.5, aes(x = county, y = percap, fill = assistance_type.2)) + 
+  geom_bar(stat = "identity") + 
+  labs(x="County", y="Per Capita Funding") +
+  ggtitle("Per Capita Federal Funding by County") +
+  scale_y_continuous(labels = scales::comma) + 
+  scale_fill_manual(values = cols) +   
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+  panel.background = element_blank(), axis.line = element_blank() , legend.title = element_blank())
+
+}) 
+
+
+
+```
+
+```{r}
+
+#Basic layout for an arbitrary number of small multiples with shiny--use facet wrap in ggplot
+
+renderPlot({
+  
+gra16.4 <- filter(gra16.3 , county %in% input$your_county )
+
+gra16.grp <- group_by(gra16.4 , county , recipient_type)
+
+gra16.sumer <- summarise(gra16.grp, fund = sum(fed_funding_amount))
+
+gra16.df <- as.data.frame(gra16.sumer)
+
+pop.filtered <- filter(population.dat.2 , Name %in% input$your_county )
+
+gra16.per <- merge(gra16.df , pop.filtered, by.x = "county", by.y = "Name")
+
+gra16.per.2 <- mutate(gra16.per , percap =  fund / population )
+
+gra16.per.3 <- gra16.per.2[c("recipient_type", "fund", "percap", "county")]
+
+#gra16.per.4 <- rbind(gra16.per.3 , ny.av.per.2)
+
+#gra16.per.5 <- mutate(gra16.per.3 , assistance_type.2 = ifelse( assistance_type == "04: Project grant", "Project Grants" , "Other Grants" ) )
+  
+  
+  ggplot(data=gra16.per.3, aes(x=recipient_type,y=percap)) +
+  geom_bar(stat="identity") +
+  facet_wrap(~county, ncol = 1) +
+  ggtitle("Multiples") 
+
+})
+
+
+```

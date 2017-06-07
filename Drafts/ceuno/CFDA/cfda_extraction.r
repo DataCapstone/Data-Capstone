@@ -1,15 +1,16 @@
 #
 # Author:   Cristian Nuno
-# Date:     June 3, 2017
+# Date:     June 5, 2017
 # Purpose:  Extract Meaningful Names from CFDA Program Title and Objective
 #
 # Load necessary packages
 library( stringi )
-library( DT )
 # Define url
 rds_url <- "https://github.com/DataCapstone/Data-Capstone/blob/master/Drafts/ceuno/cfda_program_info.rds?raw=true"
 # Import .rds url
 cfda_program <- readRDS( gzcon(url( rds_url ) ) )
+# add keyword
+cfda_program$keyword <- "fake keyword"
 
 ############ Stop words ########################
 stop.words <- read.csv( file = "https://raw.githubusercontent.com/ecmendenhall/DaveDaveFind/master/data/stopwords.csv"
@@ -25,22 +26,9 @@ stop.words.capitalcase <- stri_trans_totitle( stop.words.lowercase)
 all.stop.words <- append( stop.words.capitalcase, stop.words.lowercase)
 # add blank space to stop words
 all.stop.words <- append( all.stop.words, "")
-##################  Only Agriculture CFDA Programs    ##########################
-# Extract all row's who's "program_number" starts with 10.
-# 
-# Select vector
-agriculture <- with(cfda_program
-                    , grepl( "^10.[[:digit:]]"
-                             , program_number
-                             )
-             )
-# Separate agriculture
-usda <- cfda_program[ agriculture, ]
-# add keyword variable
-usda$keyword <- "fake keyword"
 ################### Extract keywords from "Program Title" variable ##################
 # split with pattern into list
-keywords.all <- strsplit( x = usda$program_title
+keywords.all <- strsplit( x = cfda_program$program_title
                           , split = "[[:punct:]]|[[:space:]]|\\[[:xdigit:]]"
 )
 # Remove stop words
@@ -122,5 +110,7 @@ piecemeal <- function( df, list_object) {
   return( empty_df )
 }
 ########## Test the functions ##################
-titan <- piecemeal(usda, keywords.clean.all)
-dim( titan )
+cfda_program_keywords <- piecemeal( df = cfda_program
+                   , list_object = keywords.clean.all
+                  )
+dim( cfda_program_keywords )

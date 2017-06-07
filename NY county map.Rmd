@@ -1,0 +1,184 @@
+---
+title: "NY county map"
+author: "Linnea Powell"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning=FALSE, message=FALSE)
+```
+
+```{r}
+## load packages
+library (geojsonio)
+library( maptools )
+library( sp )
+library (dplyr)
+library(stringr)
+library(ggplot2)
+library(censusapi)
+library(dplyr)
+library(shiny)
+
+```
+
+## 1. Load Data from 3 sources
+
+
+### Load Counties Map, convert to dataframe, and prep for merge
+
+#### Load map file
+```{r}
+# Read in parcel geojson file from Github
+ny.counties <- geojson_read("https://raw.githubusercontent.com/DataCapstone/Data-Capstone/master/Raw-Data/NY_counties.geojson", method="local", what="sp" )
+
+```
+
+#### Clean geoid to match county code
+```{r}
+# Restructure geoid to match county code
+colnames(ny.counties@data) <- c("geoid","county_name")
+
+ny.counties@data$county_code <- substr(ny.counties@data$geoid, 10, 12)
+
+ny.counties@data$county_code <- as.numeric(as.character(ny.counties@data$county_code))
+```
+
+
+
+### Load USA Spending Grants Data for New York FY 2016
+
+#### Load Raw Data
+```{r}
+# Read in raw data of 2016 grants in New York state with rds file
+rds_url <- "https://github.com/DataCapstone/Data-Capstone/blob/master/Raw-Data/NYgra16.rds?raw=true"
+
+ny.grants.dat <- readRDS( gzcon(url( rds_url ) ) )
+```
+
+#### Exclude Funding to State Government
+```{r}
+# Exclude funding going to state government
+ny.nonstategrants.dat <- subset (ny.grants.dat, recipient_type != "00: State government")
+```
+
+#### Select columns
+```{r}
+# Select columns for recipient county code, and recipient county name, and federal funding amount
+counties.fedfunding.dat<- select(ny.nonstategrants.dat, recipient_county_code,recipient_county_name, fed_funding_amount)
+```
+
+### Load Population Data from Census API
+```{r}
+# download acs5 2015 for Population by County
+censuskey <- "b06146bd7469912826a96e117fcf4a8ab8bc36de"
+population.dat <- getCensus(name="acs5", vintage=2015, key=censuskey, 
+                       vars=c("B01001_001E"), region="county:*", regionin = "state: 36")
+
+colnames(population.dat) <- c("state","county_code", "population")
+
+population.dat$county_code <- as.numeric(as.character(population.dat$county_code))
+```
+
+## 2. Aggregate by county, merge data, and create per capita funding variable
+
+### Add up all federal funding by county
+```{r}
+# aggregate funding by county code
+grantdollarsbycounty.agg<-aggregate(counties.fedfunding.dat$fed_funding_amount, by=list(counties.fedfunding.dat$recipient_county_code), FUN=sum, na.rm=TRUE)
+
+# rename columns
+colnames(grantdollarsbycounty.agg) <- c("county_code","federal_funding")
+
+grantdollarsbycounty.agg$county_code <- as.numeric(as.character(grantdollarsbycounty.agg$county_code))
+```
+
+### Merge data for federal funding and population 
+```{r}
+# merge county population data with aggregated county federal funding data by county code
+
+counties.merged.dat <- merge(population.dat, grantdollarsbycounty.agg, by = "county_code", all.x=TRUE, na.rm=TRUE)
+```
+
+### Create new variable for per capita funding
+```{r}
+counties.merged.percapita.dat<-mutate(counties.merged.dat, funding_per_capita=federal_funding/population)
+```
+
+### Select columns needed for plot
+```{r}
+counties.selected<- select(counties.merged.percapita.dat, county_code, federal_funding, funding_per_capita)
+```
+
+### Merge with counties shape file
+```{r}
+
+# merge map dataframe with funding data frame by county code to add in geoid and county name
+
+counties.plot<- merge(ny.counties, counties.selected, by= "county_code", all.x=TRUE, na.rm=TRUE)
+```
+
+
+### Save off new rds file
+```{r}
+# Generate an rds file 
+saveRDS (counties.plot, "Counties.plot.funding.aggregated.rds" )
+```
+
+
+### Create data frames ordered by federal funding amount and per capita funding
+
+```{r}
+# order by federal funding amount
+counties.plot<- counties.plot[order(counties.plot$federal_funding), ]
+
+```
+
+
+## 3. Plot counties color coded by amount of funding
+
+### Organizing colors
+```{r}
+# Create a color palette to display amount of federal funding on a map
+colors<- colorRampPalette( c("gray100","purple4"))
+
+# Generate colors on that continuum
+col.ramp <- colors(31)
+
+# Break up the values of the vectors into levels and cast as character
+
+counties.plot$color <-
+cut(rank(counties.plot$federal_funding), breaks = 31, labels=col.ramp)
+
+counties.plot$color<- as.character(counties.plot$color)
+
+```
+
+
+### Plot County Map of Total Federal Grant Funding
+
+```{r}
+plot(counties.plot, main="New York's Federal Grant Funding Totals by County, FY 2016",
+    col=counties.plot$color,
+    border=0    )
+```
+
+
+### Plot County Map of Per Capita Grant Funding
+
+```{r}
+# order by per capita funding amount
+counties.plot<- counties.plot[order(counties.plot$funding_per_capita), ]
+
+counties.plot$color2<-
+cut(rank(counties.plot$funding_per_capita), breaks = 31, labels=col.ramp)
+
+counties.plot$color2<- as.character(counties.plot$color2)
+
+plot(counties.plot, main="New York's Federal Grant Funding Per Capita by County, FY 2016",
+    col=counties.plot$color2,
+    border="gray80"    )
+```
+
+
+
