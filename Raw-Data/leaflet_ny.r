@@ -1,7 +1,7 @@
 #
 # Author:   Cristian Nuno
-# Date:     June 6, 2017
-# Purpose:  Making a leaflet map for New York state
+# Date:     June 7, 2017
+# Purpose:  Using Leaflet for FY16 NY Federal Spending
 #
 # Load necessary packages
 library( leaflet )
@@ -10,6 +10,8 @@ library( htmltools )
 library( htmlwidgets )
 library( geojsonio )
 library( scales )
+
+# Build the map
 # Load necessary data frames
 geojson_url <- "https://raw.githubusercontent.com/DataCapstone/Data-Capstone/master/Raw-Data/ny_county_code.geojson"
 ny_counties <- geojson_read( geojson_url, what = "sp" )
@@ -44,7 +46,7 @@ ny_map <- leaflet(ny_counties) %>%
            , zoom = 7) %>%
   # set max bounds view to cover the state of New York
   setMaxBounds( lng1 = -72, lat1 = 46
-             , lng2 = -80, lat2 = 40  ) %>% 
+                , lng2 = -80, lat2 = 40  ) %>% 
   # add Total FY16 Federal Grant Spending Polygons
   addPolygons( smoothFactor = 0.2
                , fillOpacity = 0.7
@@ -55,9 +57,9 @@ ny_map <- leaflet(ny_counties) %>%
                #, popup = dollar( update_map$federal_funding )
                , label = labels_fed_fund
                , labelOptions = labelOptions(style = list("font-weight" = "normal"
-                              , padding = "3px 8px")
-                              , textsize = "15px", direction = "auto"
-                 )
+                                                          , padding = "3px 8px")
+                                             , textsize = "15px", direction = "auto"
+               )
                , highlightOptions = highlightOptions( color = "orange"
                                                       , weight = 6
                                                       , bringToFront = TRUE
@@ -86,21 +88,6 @@ ny_map <- leaflet(ny_counties) %>%
   # add Layers control
   addLayersControl( baseGroups = c("Total Spending", "Per Capita Spending")
                     , options = layersControlOptions(collapsed = FALSE)
-                    ) %>%
-  # Make sure people know what the color values indicate
-  addLegend("bottomright"
-            , pal = pal_pc # use the same color palette we made earlier
-            , values = ny_counties$funding_per_capita # assign values to the legend
-            , title = "Per Capita  Total FY16 Federal Grant by County (without State Gov't as a Recipient)"
-            , labFormat = labelFormat(prefix = "$")
-            , opacity = 1
-  ) %>%
-  addLegend("bottomleft"
-            , pal = pal # use the same color palette we made earlier
-            , values = ny_counties$federal_funding # assign values to the legend
-            , title = "Total FY16 Federal Grant by County (without State Gov't as a Recipient)"
-            , labFormat = labelFormat(prefix = "$")
-            , opacity = 1
   ) %>%
   # add background to map
   addProviderTiles(providers$Esri.WorldStreetMap) %>%
@@ -115,8 +102,3 @@ ny_map <- leaflet(ny_counties) %>%
     icon = "ion-android-globe", title = "Zoom Back Out"
     , onClick = JS("function(btn, map){ map.setZoom(7); }")
   ) )
-# view map
-ny_map
-
-
-
