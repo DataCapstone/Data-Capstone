@@ -118,12 +118,12 @@ renderPlotly({
               plot_ly(x=as.fund.2$county, y=as.fund.2$fund, type= "bar")
 })
 
-renderPlotly({ 
+renderPlotly({if (!is.na(input$your_county[4])) {
               as.upny.2 <- filter(as.upny , county == input$your_county[4] )
               as.group <- group_by(as.upny.2 , county)
               as.fund <- summarise(as.group , fund = sum(fed_funding_amount))
               as.fund.2 <- as.data.frame(as.fund)
-              plot_ly(x=as.fund.2$county, y=as.fund.2$fund, type= "bar")
+              plot_ly(x=as.fund.2$county, y=as.fund.2$fund, type= "bar")}
 })
 
 renderPlotly({ 
