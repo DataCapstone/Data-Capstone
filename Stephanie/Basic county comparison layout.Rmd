@@ -112,37 +112,7 @@ ggplot(gra16.per.5, aes(x = county, y = percap, fill = assistance_type.2)) +
 
 ```{r}
 
-renderPrint({ 
-              i = 1 
-              df <- data.frame()
-              while (i <= length(input$your_county)){
-              #print(i)
-              print(length(input$your_county))
-              print((input$your_county[1]))
-              #gra16.4 <- filter(gra16.3, county == input$your_county[i] )
-              #as.group <- group_by(gra16.4 , county)
-              #as.fund <- summarise(as.group , fund = sum(fed_funding_amount))
-              #as.fund.2 <- as.data.frame(as.fund)
-              #print(as.fund.2)
-              i = i + 1}
-})
-
-renderPrint({ 
-              i = 1 
-              df <- data.frame()
-              while (i <= length(input$your_county)){
-              #print(i)
-              #print(input$your_county[i])
-              gra16.4 <- filter(gra16.3, county == input$your_county[i] )
-              #as.group <- group_by(gra16.4 , county)
-              #as.fund <- summarise(as.group , fund = sum(fed_funding_amount))
-              #as.fund.2 <- as.data.frame(as.fund)
-              #print(as.fund.2)
-              df <- rbind(df, gra16.4) 
-              i = i + 1}
-              #plot_ly(x=df$county, y=df$fund, type= "bar")
-              print(head(df))
-})
+#Basic layout for an arbitrary number of small multiples with shiny--use facet wrap in ggplot
 
 renderPlot({
   
