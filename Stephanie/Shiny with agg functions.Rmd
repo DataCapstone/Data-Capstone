@@ -1,0 +1,101 @@
+---
+title: "shiny with agg functions"
+runtime: shiny
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(dplyr)
+library(pander)
+library(shiny)
+library(censusapi)
+library(plotly)
+
+```
+
+```{r}
+# Download the data, clean
+gra16.named <- readRDS(gzcon(url("https://github.com/DataCapstone/Data-Capstone/blob/master/Raw-Data/NYgra16_counties_named.rds?raw=true")))
+
+codes <- read.csv("https://raw.githubusercontent.com/DataCapstone/Data-Capstone/master/Raw-Data/countycodesNY.csv")
+
+gra16.without.state <- filter(gra16.named , recipient_type != "00: State government")
+
+gra16.2 <- mutate(gra16.without.state, county = as.character(Name))
+
+gra16.3 <- gra16.2[ c("recipient_name" , "recipient_county_code", "county" , "recipient_type" , "fed_funding_amount" , "assistance_type" , "cfda_program_title" , "agency_name" ) ]
+
+#Load the population data
+censuskey <- "cc0582f55dc6c9f75f5ea92824c86e0ae5d0d5d8"
+
+population.dat <- getCensus(name="acs5", vintage=2015, key=censuskey, 
+                       vars=c("B01001_001E"), region="county:*", regionin = "state: 36")
+
+colnames(population.dat) <- c("state","county_code", "population")
+
+population.dat$county_code <- as.numeric(as.character(population.dat$county_code))
+
+population.dat.2 <- merge(population.dat , codes, by.x = "county_code", by.y = "Fips")
+
+
+# Aggregation function
+agg.county <- function(df , var){
+  
+ag <- aggregate(df$fed_funding_amount, by= list( df$county, var), FUN = sum  )
+
+colnames(ag) <- c("county", "var", "fund")
+
+  return(ag)
+}
+
+# Per capita aggregation function
+agg.county.percap <- function(df, df.p , var){
+  
+ag <- aggregate(df$fed_funding_amount, by= list( df$county, var), FUN = sum  )
+
+colnames(ag) <- c("county", "var", "fund")
+
+ag.pop <- merge(ag , df.p, by.x = "county", by.y = "Name")
+
+ag.pop.2 <- mutate(ag.pop , percap =  fund / population )
+
+ag.pop.3 <- ag.pop.2[c("var", "fund", "percap", "county")]
+
+  return(ag.pop.3)
+}
+
+```
+
+```{r}
+
+
+# Shiny input, county comparison
+selectizeInput( inputId='your_county', 
+            label='Spending per capita', 
+            choices= sort(unique(gra16.3$county)),
+            selected=c("Onondaga"), 
+            multiple = TRUE, 
+            options = list(maxItems = 5)
+            )
+
+# Shiny output
+renderPlot({
+  
+gra16.4 <- filter(gra16.3 , county %in% input$your_county )
+
+pop.filtered <- filter(population.dat.2 , Name %in% input$your_county )
+
+agg.per <- agg.county.percap(gra16.4, pop.filtered, gra16.4$recipient_type)
+
+  
+  ggplot(data=agg.per, aes(x=var, y=percap)) +
+  geom_bar(stat="identity") +
+  facet_wrap(~county, ncol = 1) +
+  ggtitle("Multiples") 
+
+})
+
+```
+
