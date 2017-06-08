@@ -26,27 +26,22 @@ gra16.without.state <- filter(gra16.named , recipient_type != "00: State governm
 gra16.2 <- mutate(gra16.without.state, county = as.character(Name))
 
 gra16.3 <- gra16.2[ c("recipient_name" , "recip_cat_type", "county" , "recipient_type" , "fed_funding_amount" , "assistance_type" , "cfda_program_title" , "agency_name" ) ]
-###
 
 
+saveRDS( gra16.3, "columns_selected.rds" )
 
 
+hmm <- readRDS(gzcon(url("https://github.com/DataCapstone/Data-Capstone/blob/master/Raw-Data/NYcensus.rds?raw=true")))
+```
+
+```{r}
 
 #Load the population data
-censuskey <- "cc0582f55dc6c9f75f5ea92824c86e0ae5d0d5d8"
+population <- readRDS(gzcon(url("https://github.com/DataCapstone/Data-Capstone/blob/master/Raw-Data/NYcensus.rds?raw=true"))) 
 
-population.dat <- getCensus(name="acs5", vintage=2015, key=censuskey, 
-                       vars=c("B01001_001E"), region="county:*", regionin = "state: 36")
+```
 
-colnames(population.dat) <- c("state","county_code", "population")
-
-population.dat$county_code <- as.numeric(as.character(population.dat$county_code))
-
-population.dat.2 <- merge(population.dat , codes, by.x = "county_code", by.y = "Fips")
-###
-
-
-
+```{r}
 
 # Aggregation function
 agg.county <- function(df , var){
@@ -68,9 +63,9 @@ ag <- aggregate(df$fed_funding_amount, by= list( df$county, var), FUN = sum  )
 
 colnames(ag) <- c("county", "var", "fund")
 
-ag.pop <- merge(ag , df.p, by.x = "county", by.y = "Name")
+ag.pop <- merge(ag , df.p, by.x = "county", by.y = "county.name")
 
-ag.pop.2 <- mutate(ag.pop , percap =  fund / population )
+ag.pop.2 <- mutate(ag.pop , percap =  fund / Pop )
 
 ag.pop.3 <- ag.pop.2[c("var", "fund", "percap", "county")]
 
@@ -89,7 +84,7 @@ colnames(ag) <- c("var", "fund")
 
 ag.2 <- mutate(ag , county = "NY Average")
 
-ag.per <- mutate(ag.2 , percap = fund / (sum(df.p$population)))
+ag.per <- mutate(ag.2 , percap = fund / (sum(df.p$Pop)))
 
   return(ag.per)
 }
@@ -118,12 +113,13 @@ source_github("https://raw.githubusercontent.com/icps86/Functions/master/krzydon
 
 ny.grp <- mutate(gra16.3 , assistance_type.2 = ifelse( assistance_type == "04: Project grant", "Project Grants" , "Other Grants" ) )
 
-ny.per <- agg.percap(ny.grp , population.dat.2 , ny.grp$assistance_type.2) #Function
+ny.per <- agg.percap(ny.grp , population , ny.grp$assistance_type.2) #Function
 
 colnames(ny.per)[1] <- "assistance_type.2"
 
 ny.per.2 <- ny.per[c("assistance_type.2", "fund", "percap", "county")]
-####
+
+saveRDS( ny.per.2, "ny_aggregated_assistance.rds" )
 
 ```
 
@@ -157,7 +153,7 @@ output$percapPlot <- renderPlot({
     
 gra16.4 <- filter(gra16.3 , county %in% input$your_county )
 
-pop.filtered <- filter(population.dat.2 , Name %in% input$your_county )
+pop.filtered <- filter(population , county.name %in% input$your_county )
 
 gra16.4.2 <- mutate(gra16.4 , assistance_type.2 = ifelse( assistance_type == "04: Project grant", "Project Grants" , "Other Grants" ) )
 
@@ -211,14 +207,47 @@ krzydonutzz(x= df, values = "fund", labels = "var", multiple = "county", main = 
   
 })
 
-output$cfdaTable <- renderDataTable({
+#Donut agency plot 
+output$recipientPlot <- renderPlot({
   
 gra16.4 <- filter(gra16.3 , county %in% input$your_county , assistance_type == "04: Project grant") 
 
-agg.per <- agg.county(gra16.4, gra16.4$cfda_program_title)
+agg.per <- agg.county(gra16.4, gra16.4$recipient_type)
+
+
+i <- 1
+df <- data.frame()
   
-agg.per
+while (i  <= length(unique(agg.per$county))) 
+{
   
+    agg.per.l <- filter(agg.per , county == unique(agg.per$county)[i])
+    agg.per.l <- agg.per.l[order(-agg.per.l$fund),]
+    flag <- as.numeric(agg.per.l[3,]$fund)
+    agg.per.l <- mutate(agg.per.l , var.2 = ifelse(fund < flag, "Other", var))
+    agg.per.l <- mutate(agg.per.l , fed_funding_amount = fund)
+    agg.per.l <- agg.county(agg.per.l, agg.per.l$var.2)
+    df <- rbind(df, agg.per.l)
+    i = i + 1
+}
+
+krzydonutzz(x= df, values = "fund", labels = "var", multiple = "county", main = "Federal Project Grant Funding by Agency", percent.cex = 3)
+  
+})
+
+
+output$cfdaTable <- renderDataTable({
+  
+gra16.4 <- filter(gra16.3 , county %in% input$your_county , assistance_type == "04: Project grant") 
+  
+gra16.5 <- gra16.4[c("county" , "agency_name",  "recipient_name", "cfda_program_title", "fed_funding_amount")]
+  
+colnames(gra16.5) <- c("County", "Agency", "Recipient", "Program Title", "Funding Recieved")
+
+gra16.5
+
+gra16.5
+
 })
 
  
