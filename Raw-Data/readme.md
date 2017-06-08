@@ -1,6 +1,6 @@
 # Import R Objects from GitHub
 
-To use other people's code, you will this function especially useful!
+To use other people's code, you will find this function especially useful!
 
 ```
 # Source GitHub Function
@@ -21,4 +21,4 @@ source_github( leaflet_url )
 ```
 Now other people's R objects are alive and well inside your R environment!
 
-*Last updated on June 7, 2017*
+*Last updated on June 8, 2017*
