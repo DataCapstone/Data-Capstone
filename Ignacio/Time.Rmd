@@ -1,0 +1,33 @@
+---
+title: "Time series"
+output: github_document
+html_document:
+  df_print: paged
+  keep_md: true
+  code_fold: hide
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set( echo = T, message=F, warning=F, fig.width = 10, fig.height = 10 )
+library(dplyr)
+library(pander)
+library(ggplot2)
+
+########################
+#grants DF
+
+gra16 <- readRDS( gzcon(url("https://github.com/DataCapstone/Data-Capstone/blob/master/Raw-Data/NYgra16_counties_named.rds?raw=true")))
+
+graTOTAL <- gra16
+
+#processing the DF
+
+#Removing state grants
+x <- gra16$recipient_type == "00: State government"
+#table(x)
+#FALSE  TRUE 
+#18695 11801
+gra16 <- gra16[!x,]
+
+options(scipen = 999)
+```
