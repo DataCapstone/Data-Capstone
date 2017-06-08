@@ -1,6 +1,5 @@
 #
-# Author:   Cristian Nuno
-# Date:     June 7, 2017
+# Date:     June 8, 2017
 # Purpose:  Draft Dashboard
 #
 # Load necessary packages
@@ -37,11 +36,20 @@ header <- dashboardHeader(title = "FY16 New York"
                   # )
   )
 ## customize sidebar ##
-sidebar <- dashboardSidebar( disable = TRUE)
+sidebar <- dashboardSidebar(
+  sidebarMenu(
+    menuItem("State Overview", tabName = "State", icon = icon("dashboard")),
+    menuItem("County Overview", tabName = "County", icon = icon("th"))
+)
+)
 
 ## customize body ##
 body <- dashboardBody(
-  fluidRow(
+  # initialize tabs
+  tabItems(
+  # First tab content
+  tabItem(tabName = "State"
+  , fluidRow(
     column(width = 4
            , DT::dataTableOutput('tbl')
            )
@@ -49,6 +57,12 @@ body <- dashboardBody(
               , leafletOutput('mymap', height=600)
               )
 ) )
+, # Second tab content
+tabItem(tabName = "County"
+        , h2("Hello!")
+)
+) # end of Tab Items
+) # end of dasboard body
 
 ## Shiny UI ##
 ui <- dashboardPage(
