@@ -16,14 +16,23 @@ source_github <- function( url ) {
   script <- getURL(url, ssl.verifypeer = FALSE)
   eval(parse(text = script), envir=.GlobalEnv)
 } 
+################# Importing External Objects ##############
 # Import leaflet
 leaflet_url <- "https://raw.githubusercontent.com/DataCapstone/Data-Capstone/master/Raw-Data/leaflet_ny.r"
 source_github( leaflet_url )
+
 # Import table
 fancy_table_url <- "https://raw.githubusercontent.com/DataCapstone/Data-Capstone/master/Raw-Data/fancy_table.r"
 source_github( fancy_table_url )
+
+# import donuts
+ig_url <- "https://raw.githubusercontent.com/DataCapstone/Data-Capstone/master/Ignacio/donutzz.R"
+source_github(ig_url)
+
+############ Building the Dashboard ##################
 # A dashboard has three parts: a header, a sidebar, and a body. 
 # Here’s the most minimal possible UI for a dashboard page.
+
 
 ## customize header ##
 header <- dashboardHeader(title = "FY16 New York"
@@ -66,12 +75,22 @@ body <- dashboardBody(
             , h2("State Overview tab content")
             , fluidRow(
               column(width = 4
-              , DT::dataTableOutput('tbl')
+                     , DT::dataTableOutput("tbl")
                         ) # end of column 1
               , column( width = 8
-                        , leafletOutput('mymap', height=600)
+                        , leafletOutput("mymap", height=600)
                         ) # end of column 2
               ) # end of row 1
+            
+            , fluidRow(
+              column( width = 6
+                      , shiny::plotOutput("donut1")
+                      ) # end of column 1
+              , column( width = 6
+                      , shiny::plotOutput("donut2")
+                      ) # end of column 2
+              
+            ) # end of row 2
             
             ) # end of third tab
 , # Fourth tab content
@@ -88,10 +107,16 @@ ui <- dashboardPage(
   , sidebar
   , body
 )
-
-## server ##
+#################################################################
+######################## Building the Server ####################
+##########aka the Infrastructure of the User Interface ##########
+#################################################################
 server <- function(input, output) {
+  ######################################
+  #### State Overview Leaflet Output####
+  ######################################
   
+  #### If statement for Dynamic Leaflet Legend ####
   observeEvent(input$mymap_groups,{
     
     mymap <- leafletProxy("mymap") %>% clearControls()
@@ -121,12 +146,23 @@ server <- function(input, output) {
     
   }) # end of render map
   
-  # Create the data table
+  #### State Overview Datatable Output ####
+  # Render the data table
   output$tbl <- DT::renderDataTable({
     fancy_table
     
   }) # end of render datatable
-
+  
+  #### State Overview Donut1 Plot Output ####
+  # Render Donut1 Plot
+  output$donut1 <- shiny::renderPlot(
+    maj_agency_donut
+  )
+  #### State Overview Donut2 Plot Output ####
+  # Render Donut2 Plot
+  output$donut2 <- shiny::renderPlot(
+    recipient_cat_donut
+  )
 
 } # end of server
 
