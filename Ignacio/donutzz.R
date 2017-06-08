@@ -1,72 +1,86 @@
-krzydonutzz <- function (x, values, labels, multiple = NULL, width.max=3, width.min=2, border.col="white", border.cex =1.5,
-                         main = "have to put a title dude/dudette!", mar = 1, percent.cex = 4, columns = 2)
-{
-  # Load Required Packages
-  require(ggplot2)
-  require(dplyr)
-  
-  #renaming the columns of the DF to work with them
-  colnames(x)[colnames(x) == multiple] <- "multiple"
-  colnames(x)[colnames(x) == labels] <- "labels"
-  colnames(x)[colnames(x) == values] <- "values"
-  
-  #Warnings
-  if (!is.numeric(x$values) || any(is.na(x$values) | x$values < 0))
-    stop("'Values' variable cannot handle NA's and must be a numeric vector with only positive numbers.")
-  
-  if (length(unique(x$multiple)) > 8)
-    stop("You are trying to plot too many donutzz! (8 max)")
+library(dplyr)
+library(pander)
+library(ggplot2)
 
-  #making factors for labels
-  x$labels <- factor(x=as.character(x$labels), ordered = F)
 
-  #loop to format the dataframe and making the variables needed
-  i <- 1
-  df <- data.frame()
-  x2 <- NULL
+################ LOADING DONUTZ FUNCTION ######################
+
+#calling the function from git
+source_github <- function( url ) {
+  # load package
+  require(RCurl)
   
-  while (i  <= length(unique(x$multiple))) 
-  {
-    x2 <- x$multiple == sort(unique(x$multiple))[i]
-    x2 <- x[x2,]
-    x2 <- x2[order(-x2$values),] 
-    x2$fraction <- x2$values/sum(x2$values)
-    x2$ymax <- cumsum(x2$fraction)
-    x2$ymin <- c(0, x2$ymax[1:length(x2$ymax)-1])
-    x2$mid <- (x2$ymin + x2$ymax)/2
-    df <- rbind(df, x2)
-    i = i + 1
-  }
-  
-  x <- df
-  
-  pie <- ggplot(data=x,
-                aes(fill=labels,
-                    xmax=width.max, xmin=width.min,
-                    ymax=ymax, ymin=ymin)) +
-    xlim(c(0, width.max + mar)) +
-    geom_rect(colour=border.col,
-              size = border.cex) +
-    coord_polar(theta="y") +
-    geom_text(aes(x= (width.min+width.max)/2, y = x$mid, label = paste0(round(x$fraction*100, digits = 1),"%")),
-              size= percent.cex,
-              fontface = "bold",
-              hjust = .5,
-              vjust = .5,
-              colour = "white") +
-    ggtitle(label=main) +
-    theme_bw() +
-    theme(panel.grid=element_blank(),
-          axis.text=element_blank(), 
-          axis.ticks=element_blank(),
-          axis.title = element_blank(),
-          panel.border = element_blank(),
-          strip.background = element_rect(fill="#B4EBFF", color = "grey80"),
-          plot.margin = margin(0,0,0,0, "cm"),
-          legend.margin = margin(0,0,0,0, "cm"),
-          legend.title = element_blank(),
-          legend.position = "right",
-          legend.text = element_text(colour = "grey40", size = 9)) +
-    facet_wrap(~multiple, ncol = columns)
-  return(pie)
-}
+  # read script lines from website and evaluate
+  script <- getURL(url, ssl.verifypeer = FALSE)
+  eval(parse(text = script), envir=.GlobalEnv)
+} 
+
+#load the donutzz function using the RAW link
+source_github("https://raw.githubusercontent.com/icps86/Functions/master/krzydonutzz")
+source_github("https://raw.githubusercontent.com/icps86/Functions/master/donutzz.R")
+
+################ GETTING THE DATAFRAMES ######################
+
+options(scipen = 999)
+
+#lOADING and processing the DF
+gra16 <- readRDS( gzcon(url("https://github.com/DataCapstone/Data-Capstone/blob/master/Raw-Data/NYgra16_counties_named.rds?raw=true")))
+
+#Removing state grants
+x <- gra16$recipient_type == "00: State government"
+gra16 <- gra16[!x,]
+
+
+################ MAIN FUNDING AGENCIES IN NY ######################
+
+#Creating an agregate by maj_agency_cat
+dat <- group_by(gra16, maj_agency_cat)
+dat <- arrange(as.data.frame(summarize(dat, Fed = sum(fed_funding_amount))), desc(Fed))
+
+#Removing code from the Agency names.
+dat$maj_agency_cat <- substr(dat$maj_agency_cat, 7,nchar(dat$maj_agency_cat))
+
+#making an others category
+dat[6,] <- c("Others", sum(dat$Fed[6:length(dat$Fed)])) 
+dat <- dat[c(1:6),]
+dat$Fed <- as.numeric(dat$Fed)
+dat <- arrange(dat, desc(Fed))
+
+#making the names smallerÑ
+
+dat$maj_agency_cat <- c("Health and Human Services", "Others", "Transportation", "Housing and Urban Development",
+"National Science Foundation", "Homeland Security")
+
+#this is the dataframe we use
+dat %>% pander
+
+#using the donutz func. to make the graph
+donutzz(x=dat$Fed, lev=dat$maj_agency_cat, main="Main Funding Agencies in NY State")
+
+
+################ MAIN RECIPIENT TYPES IN NY ######################
+
+#copying the grants database to a working-out object
+dat <- gra16
+
+#making i: 'Private agencies' to be 'f: Private agencies'
+#class(dat$recip_cat_type) #is character
+x <- dat$recip_cat_type == "i: Private agencies"
+dat$recip_cat_type[x] <- "f: Private agencies"
+
+#making recip_cat_type into a factor and changing the levels into more friendly ones
+dat$recip_cat_type <- factor(x= dat$recip_cat_type)
+
+levels(dat$recip_cat_type) <- c("Private firms", 
+                                "Government",
+                                "Public Higher Ed. Inst.",
+                                "Private Higher Ed. Inst.",
+                                "Nonprofit agencies",
+                                "Other")
+
+#Creating an agregate by recip_cat_type
+dat <- group_by(dat, recip_cat_type)
+dat <- arrange(as.data.frame(summarize(dat, Fed = sum(fed_funding_amount))), desc(Fed))
+
+#using the donutz func. to make the graph
+donutzz(x=dat$Fed, lev=dat$recip_cat_type, main="Federal Funding by Recipient Categories in NY State")
