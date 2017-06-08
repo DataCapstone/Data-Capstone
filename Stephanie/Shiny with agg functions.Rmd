@@ -25,7 +25,7 @@ gra16.without.state <- filter(gra16.named , recipient_type != "00: State governm
 
 gra16.2 <- mutate(gra16.without.state, county = as.character(Name))
 
-gra16.3 <- gra16.2[ c("recipient_name" , "recipient_county_code", "county" , "recipient_type" , "fed_funding_amount" , "assistance_type" , "cfda_program_title" , "agency_name" ) ]
+gra16.3 <- gra16.2[ c("recipient_name" , "recip_cat_type", "county" , "recipient_type" , "fed_funding_amount" , "assistance_type" , "cfda_program_title" , "agency_name" ) ]
 
   
 
@@ -106,6 +106,21 @@ colnames(ny.per)[1] <- "assistance_type.2"
 
 ny.per.2 <- ny.per[c("assistance_type.2", "fund", "percap", "county")]
 
+
+## Doughnut plots
+
+source_github <- function( url ) {
+  # load package
+  require(RCurl)
+  
+  # read script lines from website and evaluate
+  script <- getURL(url, ssl.verifypeer = FALSE)
+  eval(parse(text = script), envir=.GlobalEnv)
+} 
+
+#load the donutzz function using the RAW link
+source_github("https://raw.githubusercontent.com/icps86/Functions/master/krzydonutzz")
+
 ```
 
 ```{r}
@@ -152,21 +167,63 @@ ggplot(gra16.agg.3, aes(x = county, y = percap, fill = assistance_type.2)) +
 }) 
 
 
-# Shiny output 2:
+# Shiny output 2: So where is the project grant money coming from for each county?
 renderPlot({
   
-gra16.4 <- filter(gra16.3 , county %in% input$your_county )
+gra16.4 <- filter(gra16.3 , county %in% input$your_county , assistance_type == "04: Project grant") #do we want project grants?
 
-pop.filtered <- filter(population.dat.2 , Name %in% input$your_county )
+agg.per <- agg.county(gra16.4, gra16.4$agency_name)
 
-agg.per <- agg.county.percap(gra16.4, pop.filtered, gra16.4$recipient_type)
 
+i <- 1
+df <- data.frame()
   
-  ggplot(data=agg.per, aes(x=var, y=percap)) +
-  geom_bar(stat="identity") +
-  facet_wrap(~county, ncol = 1) +
-  ggtitle("Multiples") 
+while (i  <= length(unique(agg.per$county))) 
+{
+  
+    agg.per.l <- filter(agg.per , county == unique(agg.per$county)[i])
+    agg.per.l <- agg.per.l[order(-agg.per.l$fund),]
+#?    agg.per.l <- filter(agg.per.l, fund > 0) -- what if var is empty?
+    flag <- as.numeric(agg.per.l[3,]$fund)
+    agg.per.l <- mutate(agg.per.l , var.2 = ifelse(fund < flag, "Other", var))
+    agg.per.l <- mutate(agg.per.l , fed_funding_amount = fund)
+    agg.per.l <- agg.county(agg.per.l, agg.per.l$var.2)
+    df <- rbind(df, agg.per.l)
+    i = i + 1
+}
+
+krzydonutzz(x= df, values = "fund", labels = "var", multiple = "county", main = "Federal Project Grant Funding by Agency", percent.cex = 3)
 
 })
+
+
+# Shiny input, recipient selector
+radioButtons( inputId = 'recipient', 
+              label = 'Pick a type of recipient:',
+              choices = c("All", sort(unique(gra16.3$recip_cat_type))), 
+              selected = "All")
+
+#Shiny output 3: Who is getting what types of project grants?
+
+renderPrint({
+
+if (input$recipient != "All"){
+    
+gra16.4 <- filter(gra16.3 , county %in% input$your_county , assistance_type == "04: Project grant", recip_cat_type == input$recipient) 
+
+agg.per <- agg.county(gra16.4, gra16.4$cfda_program_title)
+
+} else if ( input$recipient == "All" ){
+
+gra16.4 <- filter(gra16.3 , county %in% input$your_county , assistance_type == "04: Project grant") 
+
+agg.per <- agg.county(gra16.4, gra16.4$cfda_program_title)
+      
+}
+  
+print(agg.per)
+
+})
+
 
 ```
