@@ -1,6 +1,6 @@
 #
 # Author:   Cristian Nuno
-# Date:     June 7, 2017
+# Date:     June 8, 2017
 # Purpose:  Draft Dashboard
 #
 # Load necessary packages
@@ -37,18 +37,50 @@ header <- dashboardHeader(title = "FY16 New York"
                   # )
   )
 ## customize sidebar ##
-sidebar <- dashboardSidebar( disable = TRUE)
+sidebar <- dashboardSidebar(
+  sidebarMenu(
+    menuItem("Introduction", tabName = "Introduction", icon = icon("home"))
+    , menuItem("Use Case", tabName = "Use", icon = icon("briefcase"))
+    , menuItem("State Overview", tabName = "State", icon = icon("search"))
+    , menuItem("County Overview", tabName = "County", icon = icon("bar-chart"))
+)
+)
 
 ## customize body ##
 body <- dashboardBody(
-  fluidRow(
-    column(width = 4
-           , DT::dataTableOutput('tbl')
-           )
-    , column( width = 8
-              , leafletOutput('mymap', height=600)
-              )
-) )
+  # initialize tabs
+  tabItems(
+  # First tab content
+    tabItem( tabName = "Introduction"
+             , h1("Welcome to the Introduction")
+             , h2("Introduction tab content")
+             )
+    # second tab content
+    , tabItem( tabName = "Use"
+             , h1("Welcome to the Use Case")
+             , h2("Use Case tab content")
+             )
+    # third tab content
+  , tabItem(tabName = "State"
+            , h1("Welcome to the State Overview")
+            , h2("State Overview tab content")
+            , fluidRow(
+              column(width = 4
+              , DT::dataTableOutput('tbl')
+                        ) # end of column 1
+              , column( width = 8
+                        , leafletOutput('mymap', height=600)
+                        ) # end of column 2
+              ) # end of row 1
+            
+            ) # end of third tab
+, # Fourth tab content
+tabItem(tabName = "County"
+        , h1("Welcome to the County Overview")
+        , h2("County Overview tab content")
+)
+) # end of Tab Items
+) # end of dasboard body
 
 ## Shiny UI ##
 ui <- dashboardPage(
