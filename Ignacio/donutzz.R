@@ -1,3 +1,5 @@
+# 
+# Ignacio's State Code
 library(dplyr)
 library(pander)
 library(ggplot2)
@@ -49,13 +51,13 @@ dat <- arrange(dat, desc(Fed))
 #making the names smallerÑ
 
 dat$maj_agency_cat <- c("Health and Human Services", "Others", "Transportation", "Housing and Urban Development",
-"National Science Foundation", "Homeland Security")
+                        "National Science Foundation", "Homeland Security")
 
 #this is the dataframe we use
-dat %>% pander
+# dat %>% pander
 
 #using the donutz func. to make the graph
-donutzz(x=dat$Fed, lev=dat$maj_agency_cat, main="Main Funding Agencies in NY State")
+maj_agency_donut <- donutzz(x=dat$Fed, lev=dat$maj_agency_cat, main=NULL)
 
 
 ################ MAIN RECIPIENT TYPES IN NY ######################
@@ -83,4 +85,5 @@ dat <- group_by(dat, recip_cat_type)
 dat <- arrange(as.data.frame(summarize(dat, Fed = sum(fed_funding_amount))), desc(Fed))
 
 #using the donutz func. to make the graph
-donutzz(x=dat$Fed, lev=dat$recip_cat_type, main="Federal Funding by Recipient Categories in NY State")
+recipient_cat_donut <- donutzz(x=dat$Fed, lev=dat$recip_cat_type, main=NULL)
+
