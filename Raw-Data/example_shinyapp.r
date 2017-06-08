@@ -29,10 +29,13 @@ source_github( fancy_table_url )
 ig_url <- "https://raw.githubusercontent.com/DataCapstone/Data-Capstone/master/Ignacio/donutzz.R"
 source_github(ig_url)
 
-############ Building the Dashboard ##################
-# A dashboard has three parts: a header, a sidebar, and a body. 
-# Here’s the most minimal possible UI for a dashboard page.
+############ Building the Dashboard##################
+# A dashboard has 2 parts: a user-interface (ui) and a server
 
+# The UI consists of a header, a sidebar, and a body.
+
+# The server consists of functions that produce any objects
+# that are called inside the UI
 
 ## customize header ##
 header <- dashboardHeader(title = "FY16 New York"
