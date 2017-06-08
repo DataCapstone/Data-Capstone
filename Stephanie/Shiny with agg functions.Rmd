@@ -183,7 +183,6 @@ while (i  <= length(unique(agg.per$county)))
   
     agg.per.l <- filter(agg.per , county == unique(agg.per$county)[i])
     agg.per.l <- agg.per.l[order(-agg.per.l$fund),]
-#?    agg.per.l <- filter(agg.per.l, fund > 0) -- what if var is empty?
     flag <- as.numeric(agg.per.l[3,]$fund)
     agg.per.l <- mutate(agg.per.l , var.2 = ifelse(fund < flag, "Other", var))
     agg.per.l <- mutate(agg.per.l , fed_funding_amount = fund)
