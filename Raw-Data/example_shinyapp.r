@@ -29,6 +29,10 @@ source_github( fancy_table_url )
 ig_url <- "https://raw.githubusercontent.com/DataCapstone/Data-Capstone/master/Ignacio/donutzz.R"
 source_github(ig_url)
 
+# import county overview 
+co_url <- "https://raw.githubusercontent.com/DataCapstone/Data-Capstone/master/Raw-Data/county_comparison_sw.r"
+source_github(co_url)
+
 ############ Building the Dashboard##################
 
 # A dashboard has 2 parts: a user-interface (ui) and a server
@@ -107,7 +111,21 @@ body <- dashboardBody(
 tabItem(tabName = "County"
         , h1("Welcome to the County Overview")
         , h2("County Overview tab content")
-)
+        , fluidPage(
+          selectizeInput(
+            inputId='your_county', 
+            label='Select up to 5 counties to compare:', 
+            choices= sort(unique(gra16.3$county)),
+            selected=c("Onondaga"), 
+            multiple = TRUE, 
+            options = list(maxItems = 5)
+            ) # finish selectize input
+          , shiny::plotOutput("percapPlot")
+          , shiny::plotOutput("agencyPlot")
+          , shiny::plotOutput("recipientPlot")
+          , DT::dataTableOutput("cfdaTable")
+        ) # end of fluid page
+) # end of Tab Item
 ) # end of Tab Items
 ) # end of dasboard body
 
@@ -173,7 +191,114 @@ server <- function(input, output) {
   output$donut2 <- shiny::renderPlot(
     recipient_cat_donut
   )
-
+  #######################################
+  #### County Overview Shiny Elements####
+  #######################################
+  
+  #Percapita bar plot  
+  output$percapPlot <- shiny::renderPlot({
+    
+    
+    gra16.4 <- filter(gra16.3 , county %in% input$your_county )
+    
+    pop.filtered <- filter(population , county.name %in% input$your_county )
+    
+    gra16.4.2 <- mutate(gra16.4 , assistance_type.2 = ifelse( assistance_type == "04: Project grant", "Project Grants" , "Other Grants" ) )
+    
+    gra16.agg <- agg.county.percap(gra16.4.2 , pop.filtered, gra16.4.2$assistance_type.2) #Function
+    
+    colnames(gra16.agg)[1] <- "assistance_type.2"
+    
+    gra16.agg.2 <- gra16.agg[c("assistance_type.2", "fund", "percap", "county")]
+    
+    gra16.agg.3 <- rbind(gra16.agg.2 , ny.per.2)
+    
+    cols <- c("#00CCFF","#3333FF")
+    
+    ggplot(gra16.agg.3, aes(x = county, y = percap, fill = assistance_type.2)) + 
+      geom_bar(stat = "identity") + 
+      labs(x="County", y="Per Capita Funding") +
+      ggtitle("Per Capita Federal Funding by County") +
+      scale_y_continuous(labels = scales::comma) + 
+      scale_fill_manual(values = cols) +   
+      theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+            panel.background = element_blank(), axis.line = element_blank() , legend.title = element_blank())
+    
+    
+  }) # end of per capita plot
+  
+  #Donut agency plot 
+  output$agencyPlot <- shiny::renderPlot({
+    
+    gra16.4 <- filter(gra16.3 , county %in% input$your_county , assistance_type == "04: Project grant") #do we want project grants?
+    
+    agg.per <- agg.county(gra16.4, gra16.4$agency_name)
+    
+    
+    i <- 1
+    df <- data.frame()
+    
+    while (i  <= length(unique(agg.per$county))) 
+    {
+      
+      agg.per.l <- filter(agg.per , county == unique(agg.per$county)[i])
+      agg.per.l <- agg.per.l[order(-agg.per.l$fund),]
+      flag <- as.numeric(agg.per.l[3,]$fund)
+      agg.per.l <- mutate(agg.per.l , var.2 = ifelse(fund < flag, "Other", var))
+      agg.per.l <- mutate(agg.per.l , fed_funding_amount = fund)
+      agg.per.l <- agg.county(agg.per.l, agg.per.l$var.2)
+      df <- rbind(df, agg.per.l)
+      i = i + 1
+    }
+    
+    krzydonutzz(x= df, values = "fund", labels = "var", multiple = "county", main = "Federal Project Grant Funding by Agency", percent.cex = 3)
+    
+  })
+  
+  #Donut agency plot 
+  output$recipientPlot <- shiny::renderPlot({
+    
+    gra16.4 <- filter(gra16.3 , county %in% input$your_county , assistance_type == "04: Project grant") 
+    
+    agg.per <- agg.county(gra16.4, gra16.4$recipient_type)
+    
+    
+    i <- 1
+    df <- data.frame()
+    
+    while (i  <= length(unique(agg.per$county))) 
+    {
+      
+      agg.per.l <- filter(agg.per , county == unique(agg.per$county)[i])
+      agg.per.l <- agg.per.l[order(-agg.per.l$fund),]
+      flag <- as.numeric(agg.per.l[3,]$fund)
+      agg.per.l <- mutate(agg.per.l , var.2 = ifelse(fund < flag, "Other", var))
+      agg.per.l <- mutate(agg.per.l , fed_funding_amount = fund)
+      agg.per.l <- agg.county(agg.per.l, agg.per.l$var.2)
+      df <- rbind(df, agg.per.l)
+      i = i + 1
+    }
+    
+    krzydonutzz(x= df, values = "fund", labels = "var", multiple = "county", main = "Federal Project Grant Funding by Recipient Type", percent.cex = 3)
+    
+  })
+  
+  
+  output$cfdaTable <- DT::renderDataTable({
+    
+    gra16.4 <- filter(gra16.3 , county %in% input$your_county , assistance_type == "04: Project grant") 
+    
+    gra16.5 <- gra16.4[c("county" , "agency_name",  "recipient_name", "cfda_program_title", "fed_funding_amount")]
+    
+    colnames(gra16.5) <- c("County", "Agency", "Recipient", "Program Title", "Funding Recieved")
+    
+    gra16.5
+    
+    gra16.5
+    
+  })
+  
+  
 } # end of server
 
 ## call the Shiny App ##
