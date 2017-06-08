@@ -16,7 +16,7 @@ fancy_table <- datatable( select( ny_counties@data
                                   , funding_per_capita
 )
   , rownames = FALSE
-  , colnames = c("County Name", "Total Federal Funding", "Total Per Capita Federal Funding")
+  , colnames = c("County Name", "Total Federal Funding Received", "Total Per Capita Federal Funding")
   , options = list(lengthChange = FALSE)
   ) %>% # end of creating datatable
    formatCurrency(columns = c("federal_funding", "funding_per_capita"))
