@@ -30,6 +30,7 @@ ig_url <- "https://raw.githubusercontent.com/DataCapstone/Data-Capstone/master/I
 source_github(ig_url)
 
 ############ Building the Dashboard##################
+
 # A dashboard has 2 parts: a user-interface (ui) and a server
 
 # The UI consists of a header, a sidebar, and a body.
@@ -84,13 +85,19 @@ body <- dashboardBody(
                         , leafletOutput("mymap", height=600)
                         ) # end of column 2
               ) # end of row 1
-            
+            , h3("Let's Examine Which Federal Agencies Are Distributing Funds\nand What Type of Organizations are Receiving these Funds.\n Please note that these funds do not include the federal grants which were awarded to the state government.") # blank space
             , fluidRow(
               column( width = 6
-                      , shiny::plotOutput("donut1")
+                , box( title = "Percentage of Total Federal Funds by Federal Agency", status = "primary",
+                     solidHeader = TRUE, collapsible = FALSE, width = NULL
+                     #, background = "fuchsia"
+                     , shiny::plotOutput("donut1") ) # end of box 1
                       ) # end of column 1
               , column( width = 6
-                      , shiny::plotOutput("donut2")
+                        , box( title = "Percentage of Total Federal Funds by Recipient Type", status = "primary",
+                               solidHeader = TRUE, collapsible = FALSE, width = NULL
+                               #, background = "maroon"
+                               , shiny::plotOutput("donut2") ) # end of box 2
                       ) # end of column 2
               
             ) # end of row 2
