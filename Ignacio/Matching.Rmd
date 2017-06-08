@@ -19,10 +19,11 @@ library(MatchIt)
 
 setwd("C:/Users/icps/Dropbox/3. Maxwell/4. Capston")
 
-#########################Loading DATASETS########################
+```
 
 
-#CENSUS DF
+```{r, eval=FALSE}
+#CREATING A NYCENSUS COUNTY RDS
 
 # download acs5 2015 for Population, Median Household income, White, Black, Asian, Hispanic or latino, Unemployed, Income < poverty level last 12 months, In Labor Force
 censuskey <- "5a9ad013c3692d7dfdd344a9b2b774f36c50b43d"
@@ -45,37 +46,45 @@ dem <- dat[,c(1:2,12,3:11)]
 
 #making rates
 #colnames(dem)
-dem$pov <- dem$Poverty/dem$Pop
-dem$une <- dem$Unemployed/dem$Labor
+dem$pov.rate <- dem$Poverty/dem$Pop
+dem$une.rate <- dem$Unemployed/dem$Labor
+dem$whi.rate <- dem$White/dem$Pop
+dem$bla.rate <- dem$Black/dem$Pop
+dem$asi.rate <- dem$Asian/dem$Pop
+dem$his.rate <- dem$Hispanic/dem$Pop
 
-dem$whi <- dem$White/dem$Pop
-dem$bla <- dem$Black/dem$Pop
-dem$asi <- dem$Asian/dem$Pop
-dem$his <- dem$Hispanic/dem$Pop
+dem$county <- as.numeric(dem$county)
 
+colnames(dem)[2] <- "county.code"
 
-#saveRDS(dem, file = "NYcensus.rds")
-
-############Grants DF##########
-
-gra16 <- readRDS( gzcon(url("https://github.com/DataCapstone/Data-Capstone/blob/master/Raw-Data/NYgra16.rds?raw=true")))
-
+saveRDS(dem, file = "NYcensus.rds")
 
 ```
 
-#Some definitions
-* A covariate is a variable that is possibly predictive of the outcome under study. A covariate may be of direct interest or it may be a confounding or interacting variable.
+```{r}
+#########################Loading DATASETS########################
 
+############Grants DF##########
+
+gra16 <- readRDS( gzcon(url("https://github.com/DataCapstone/Data-Capstone/blob/master/Raw-Data/NYgra16_counties_named.rds?raw=true")))
+
+############Grants DF##########
+NYcensus <- readRDS( gzcon(url("https://github.com/DataCapstone/Data-Capstone/blob/master/Raw-Data/NYcensus.rds?raw=true")))
+
+```
+
+
+#Matchit 
 ```{r}
 
 #################################################
 
+dat <- NYcensus
 
-#data for the loop
-dat <- dem
+#To run matchit we need to have a treatment and control group
+#We flag one county as part of the treatment group and the 61 others are assumed as the control
 
-#flagging Onondaga with the v Treat
-county <- "Broome"
+county <- "Onondaga"
 x <- dat$county.name == county
 dat$Treat <- 0
 dat$Treat[x] <- 1
