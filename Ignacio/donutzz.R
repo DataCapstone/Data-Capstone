@@ -1,7 +1,6 @@
 # 
 # Ignacio's State Code
 library(dplyr)
-library(pander)
 library(ggplot2)
 
 
