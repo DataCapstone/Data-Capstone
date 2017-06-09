@@ -47,7 +47,7 @@ labels_fed_fund_pc <- sprintf(
 ny_map <- leaflet(ny_counties) %>%
   # set zoom level
   setView( lng = -76.126197, lat = 43.034706
-           , zoom = 6) %>%
+           , zoom = 7) %>%
   # set max bounds view to cover the state of New York
   setMaxBounds( lng1 = -72, lat1 = 46
                 , lng2 = -80, lat2 = 40  ) %>% 
@@ -92,7 +92,7 @@ ny_map <- leaflet(ny_counties) %>%
   # add Layers control
   addLayersControl( baseGroups = c("Total Spending", "Per Capita Spending")
                     , options = layersControlOptions(collapsed = FALSE)
-                   , position = "bottomleft"
+                   , position = "topright"
   ) %>%
   # add background to map
   addProviderTiles(providers$Esri.WorldStreetMap) %>%
