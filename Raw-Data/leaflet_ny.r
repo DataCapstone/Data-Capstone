@@ -92,7 +92,7 @@ ny_map <- leaflet(ny_counties) %>%
   # add Layers control
   addLayersControl( baseGroups = c("Total Spending", "Per Capita Spending")
                     , options = layersControlOptions(collapsed = FALSE)
-                   , position = "topright"
+                  # , position = "topright"
   ) %>%
   # add background to map
   addProviderTiles(providers$Esri.WorldStreetMap) %>%
