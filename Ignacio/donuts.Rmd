@@ -33,11 +33,6 @@ options(scipen = 999)
 ```
 
 
-nEED TO:
-* collapse recip_cat_types? 
-* processed source DFs
-
-
 #USING PIE FUNCTION and exploring both total and no state grants for NY
 
 ##Main Federal Funding Agencies in NY

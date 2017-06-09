@@ -2,45 +2,91 @@ Matching Cities
 ================
 
 ``` r
-#Using the census data we can visualize the Population of NY state by county. 
+#CREATING A NYCENSUS COUNTY RDS
 
-par(mar = c(7,6,3,3), mfrow=c(1,1))
-dat <- arrange(dat, desc(Pop))
-barplot(dat$Pop/1000, names.arg = dat$county.name, las = 2, cex.names = .7, cex.axis = .7 , ylab = "in 1000 USD", cex.lab = .8, col="dodgerblue4")
+# download acs5 2015 for Population, Median Household income, White, Black, Asian, Hispanic or latino, Unemployed, Income < poverty level last 12 months, In Labor Force
+censuskey <- "5a9ad013c3692d7dfdd344a9b2b774f36c50b43d"
+dat <- getCensus(name="acs5", vintage=2015, key=censuskey, 
+                       vars=c("B01001_001E", "B19013_001E", "B01001A_001E","B01001B_001E", "B01001D_001E", "B01001I_001E", "B23025_005E", "B17001_002E", "B23025_002E"), region="county:*", regionin = "state: 36")
+
+colnames(dat)[3:11] <- c("Pop", "MHincome", "White", "Black", "Asian", "Hispanic", "Unemployed", "Poverty", "Labor")
+
+#creating a county.name variable
+
+#getting a DF with the names of the counties and codes.
+cou <- read.csv("https://raw.githubusercontent.com/DataCapstone/Data-Capstone/master/Raw-Data/countycodesNY.csv", stringsAsFactors = F)
+dat$county.name <- as.factor(dat$county)
+levels(dat$county.name) <- as.character(cou$Name)
+#I used levels to standardize the names, but another way to do this could be using the match function:
+#order <- match(as.numeric(dat$county), cou$Fips)
+
+#ordering the DF
+dem <- dat[,c(1:2,12,3:11)]
+
+#making rates
+#colnames(dem)
+dem$pov.rate <- dem$Poverty/dem$Pop
+dem$une.rate <- dem$Unemployed/dem$Labor
+dem$whi.rate <- dem$White/dem$Pop
+dem$bla.rate <- dem$Black/dem$Pop
+dem$asi.rate <- dem$Asian/dem$Pop
+dem$his.rate <- dem$Hispanic/dem$Pop
+
+dem$county <- as.numeric(dem$county)
+
+colnames(dem)[2] <- "county.code"
+
+saveRDS(dem, file = "NYcensus.rds")
 ```
-
-![](Matching_files/figure-markdown_github/unnamed-chunk-1-1.png)
 
 ``` r
-#Generating a color pallette
-colors <- colorRampPalette( c("white", "light grey","dodgerblue4")) #this makes a function called "col"
-colors <- colors( 7 ) # using the function we input the arg for the number of colors in that continium. And then saving the output as col too.
+#########################Loading DATASETS########################
 
-#dividing the ranked data into groups and adding color as a label. 
-col <- cut(rank(dat$Pop), breaks=7, labels=colors)
-col <- as.character(col) #the result is a list corresponding to the county but with the pop color.
+############Grants DF##########
 
-#making the label for our legend.
-#brakets <- seq(from=1, to = max(dat$Pop), by = max(dat$Pop)/7)
-#1.0  370752.3  741503.6 1112254.9 1483006.1 1853757.4 2224508.7
-brakets <- c("< 371k", "371k - 741k", "741k - 1.1m", "1.1m - 1.5m", "1.5m - 1.8m", "1.8m - 2.3m")
+gra16 <- readRDS( gzcon(url("https://github.com/DataCapstone/Data-Capstone/blob/master/Raw-Data/NYgra16_counties_named.rds?raw=true")))
 
-#plotting the graph
-par(mar= c(0,1,1,1))
-plot(shapes, main="County Population in New York State",
-    axes = F,
-    cex.axis=.8,
-    col=col 
-    )
-
-#plotting the legend
-legend("right", bg="white"
-        , cex=0.8
-        , legend= rev(brakets)
-        , fill=rev(colors)
-        , box.col="white"
-        , title="Population" 
-        )
+############Grants DF##########
+NYcensus <- readRDS( gzcon(url("https://github.com/DataCapstone/Data-Capstone/blob/master/Raw-Data/NYcensus.rds?raw=true")))
 ```
 
-![](Matching_files/figure-markdown_github/unnamed-chunk-1-2.png)
+Matchit
+=======
+
+``` r
+#################################################
+
+dat <- NYcensus
+
+#To run matchit we need to have a treatment and control group
+#We flag one county as part of the treatment group and the 61 others are assumed as the control
+
+county <- "Onondaga"
+x <- dat$county.name == county
+dat$Treat <- 0
+dat$Treat[x] <- 1
+
+#creating objects
+mat.list <- rep(NA,5)
+dis <- rep(FALSE, 62)
+
+#pop density
+for (i in c(1:5)) {
+  mat <- matchit(Treat ~  Pop + MHincome + pov.rate, data = dat, discard = dis)
+  x <- as.numeric(mat$match.matrix)
+  dis[x] <- TRUE
+  mat.list[i] <- x
+  }
+x <- paste(1:5, ".", as.character(dat$county.name[mat.list]), ", ", sep = "", collapse = "")
+x <- substr(x,1,nchar(x)-2)
+x <- paste0("Matches for ", county, ": ", x)
+print(x)
+```
+
+    ## [1] "Matches for Onondaga: 1.Broome, 2.St. Lawrence, 3.Orange, 4.Sullivan, 5.Monroe"
+
+``` r
+#to add to this:
+#t test to show covarietes.
+#confidence interval and diagram to show how different it is.
+```
