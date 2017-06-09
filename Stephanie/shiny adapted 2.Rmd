@@ -249,11 +249,6 @@ position = position_dodge(), stat="identity") +  facet_wrap(~County_Name)+
 
 
 
-
-
-
-
-
 })
 
 
