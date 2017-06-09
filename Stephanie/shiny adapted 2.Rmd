@@ -151,11 +151,11 @@ saveRDS( ny.per.2, "ny_aggregated_assistance.rds" )
 ui <- fluidPage(
       selectizeInput(
         inputId='your_county', 
-            label='Select up to 5 counties to compare:', 
+            label='Select up to 4 counties to compare:', 
             choices= sort(unique(gra16.3$county)),
             selected=c("Onondaga"), 
             multiple = TRUE, 
-            options = list(maxItems = 5)
+            options = list(maxItems = 4)
         ),
       
       radioButtons(
@@ -219,7 +219,7 @@ gra16.4 <- filter(gra16.3 , county %in% input$your_county , assistance_type == "
 
 agg.per <- agg.county(gra16.4, gra16.4$recip_cat_type)
 
-krzydonutzz(x= agg.per, values = "fund", labels = "var", multiple = "county", main = "Federal Project Grant Funding by Recipient", percent.cex = 3)
+krzydonutzz(x= agg.per, values = "fund", labels = "var", multiple = "county", main = "Federal Project Grant Funding by Recipient", percent.cex = 3, columns = 4)
   
 })
 
@@ -242,7 +242,7 @@ counties.percap.ordered<- county.filter.small[order(county.filter.small$percap),
 selected<-counties.percap.ordered[unlist(tapply(row.names(counties.percap.ordered), counties.percap.ordered$County_Name, tail, n = 3)), ] 
 
    ggplot(selected, aes(Agency, percap)) + geom_bar(aes(fill = County_Name), 
-position = position_dodge(), stat="identity") +  facet_wrap(~County_Name)+
+position = position_dodge(), stat="identity") +  facet_wrap(~County_Name, ncol = 4)+
    theme(legend.position="right", legend.title = 
    element_blank(),axis.title.x=element_blank(), 
    axis.title.y= element_blank()) + coord_flip()
