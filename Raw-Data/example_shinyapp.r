@@ -114,15 +114,20 @@ tabItem(tabName = "County"
         , fluidPage(
           selectizeInput(
             inputId='your_county', 
-            label='Select up to 5 counties to compare:', 
+            label='Select up to 4 counties to compare:', 
             choices= sort(unique(gra16.3$county)),
             selected=c("Onondaga"), 
             multiple = TRUE, 
-            options = list(maxItems = 5)
-            ) # finish selectize input
+            options = list(maxItems = 4)
+            )# finish selectize input
+          ,  radioButtons(
+            inputId = 'recipient',
+            label='Select a recipient:',
+            choices = c( sort(unique(as.character(gra16.3$recip_cat_type))))
+            )
           , shiny::plotOutput("percapPlot")
-          , shiny::plotOutput("agencyPlot")
           , shiny::plotOutput("recipientPlot")
+          , shiny::plotOutput("agencyPlot")
           , DT::dataTableOutput("cfdaTable")
         ) # end of fluid page
 ) # end of Tab Item
@@ -227,72 +232,57 @@ server <- function(input, output) {
     
   }) # end of per capita plot
   
-  #Donut agency plot 
+  #Bar agency plot 
   output$agencyPlot <- shiny::renderPlot({
     
-    gra16.4 <- filter(gra16.3 , county %in% input$your_county , assistance_type == "04: Project grant") #do we want project grants?
     
-    agg.per <- agg.county(gra16.4, gra16.4$agency_name)
+    recipient.filter <- filter(gra16.3, recip_cat_type == input$recipient, assistance_type == "04: Project grant" , fed_funding_amount > 0)
+    
+    agency.agg <- aggregate (recipient.filter$fed_funding_amount, by=list(recipient.filter$agency_name, recipient.filter$county), FUN=sum, na.rm=TRUE)
+    colnames(agency.agg)<- c("Agency", "County_Name", "Federal_Funding")
+    
+    agg.pop <- merge(agency.agg , population, by.x = "County_Name", by.y = "county.name", all.x=TRUE)
+    
+    agg.pop.percap <- mutate(agg.pop , percap =  Federal_Funding / Pop )
+    
+    county.filter <- filter(agg.pop.percap, County_Name %in% input$your_county)
+    county.filter.small <- subset (county.filter, select=c("County_Name", "Agency", "percap"))
+    
+    counties.percap.ordered<- county.filter.small[order(county.filter.small$percap), ]
+    
+    selected<-counties.percap.ordered[unlist(tapply(row.names(counties.percap.ordered), counties.percap.ordered$County_Name, tail, n = 3)), ] 
+    
+    ggplot(selected, aes(Agency, percap)) + geom_bar(aes(fill = County_Name), 
+                                                     position = position_dodge(), stat="identity") +  facet_wrap(~County_Name, ncol = 4)+
+      theme(legend.position="right", legend.title = 
+              element_blank(),axis.title.x=element_blank(), 
+            axis.title.y= element_blank()) + coord_flip()
     
     
-    i <- 1
-    df <- data.frame()
-    
-    while (i  <= length(unique(agg.per$county))) 
-    {
-      
-      agg.per.l <- filter(agg.per , county == unique(agg.per$county)[i])
-      agg.per.l <- agg.per.l[order(-agg.per.l$fund),]
-      flag <- as.numeric(agg.per.l[3,]$fund)
-      agg.per.l <- mutate(agg.per.l , var.2 = ifelse(fund < flag, "Other", var))
-      agg.per.l <- mutate(agg.per.l , fed_funding_amount = fund)
-      agg.per.l <- agg.county(agg.per.l, agg.per.l$var.2)
-      df <- rbind(df, agg.per.l)
-      i = i + 1
-    }
-    
-    krzydonutzz(x= df, values = "fund", labels = "var", multiple = "county", main = "Federal Project Grant Funding by Agency", percent.cex = 3)
     
   })
   
-  #Donut agency plot 
+  #Donut recipient plot 
   output$recipientPlot <- shiny::renderPlot({
     
-    gra16.4 <- filter(gra16.3 , county %in% input$your_county , assistance_type == "04: Project grant") 
     
-    agg.per <- agg.county(gra16.4, gra16.4$recipient_type)
+    gra16.4 <- filter(gra16.3 , county %in% input$your_county , assistance_type == "04: Project grant" , fed_funding_amount > 0) #just care about incoming funds for project grants
     
+    agg.per <- agg.county(gra16.4, gra16.4$recip_cat_type)
     
-    i <- 1
-    df <- data.frame()
+    krzydonutzz(x= agg.per, values = "fund", labels = "var", multiple = "county", main = "Federal Project Grant Funding by Recipient", percent.cex = 3, columns = 4)
     
-    while (i  <= length(unique(agg.per$county))) 
-    {
-      
-      agg.per.l <- filter(agg.per , county == unique(agg.per$county)[i])
-      agg.per.l <- agg.per.l[order(-agg.per.l$fund),]
-      flag <- as.numeric(agg.per.l[3,]$fund)
-      agg.per.l <- mutate(agg.per.l , var.2 = ifelse(fund < flag, "Other", var))
-      agg.per.l <- mutate(agg.per.l , fed_funding_amount = fund)
-      agg.per.l <- agg.county(agg.per.l, agg.per.l$var.2)
-      df <- rbind(df, agg.per.l)
-      i = i + 1
-    }
-    
-    krzydonutzz(x= df, values = "fund", labels = "var", multiple = "county", main = "Federal Project Grant Funding by Recipient Type", percent.cex = 3)
     
   })
   
   
   output$cfdaTable <- DT::renderDataTable({
     
-    gra16.4 <- filter(gra16.3 , county %in% input$your_county , assistance_type == "04: Project grant") 
+    gra16.4 <- filter(gra16.3 , county %in% input$your_county , assistance_type == "04: Project grant", fed_funding_amount > 0, recip_cat_type == input$recipient) 
     
-    gra16.5 <- gra16.4[c("county" , "agency_name",  "recipient_name", "cfda_program_title", "fed_funding_amount")]
+    gra16.5 <- gra16.4[c("county" , "agency_name",  "recipient_name", "recip_cat_type", "cfda_program_title", "fed_funding_amount")]
     
-    colnames(gra16.5) <- c("County", "Agency", "Recipient", "Program Title", "Funding Recieved")
-    
-    gra16.5
+    colnames(gra16.5) <- c("County", "Agency", "Recipient", "Recipient Type", "Program Title", "Funding Recieved")
     
     gra16.5
     
