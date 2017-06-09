@@ -47,7 +47,7 @@ dat <- dat[c(1:6),]
 dat$Fed <- as.numeric(dat$Fed)
 dat <- arrange(dat, desc(Fed))
 
-#making the names smallerÑ
+#making the names smaller
 
 dat$maj_agency_cat <- c("Health and Human Services", "Others", "Transportation", "Housing and Urban Development",
                         "National Science Foundation", "Homeland Security")
