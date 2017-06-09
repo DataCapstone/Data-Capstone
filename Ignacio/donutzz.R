@@ -18,7 +18,7 @@ source_github <- function( url ) {
 
 #load the donutzz function using the RAW link
 source_github("https://raw.githubusercontent.com/icps86/Functions/master/krzydonutzz.r") # test2
-source_github("https://raw.githubusercontent.com/icps86/Functions/master/donutzz.R")
+source_github("https://raw.githubusercontent.com/icps86/Functions/master/donutzz.r") # test3
 
 ################ GETTING THE DATAFRAMES ######################
 
