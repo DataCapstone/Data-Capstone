@@ -225,7 +225,7 @@ krzydonutzz(x= agg.per, values = "fund", labels = "var", multiple = "county", ma
 
 output$agencyPlot <- renderPlot({
   
-recipient.filter <- filter(gra16.3, recip_cat_type == input$recipient)
+recipient.filter <- filter(gra16.3, recip_cat_type == input$recipient, assistance_type == "04: Project grant" , fed_funding_amount > 0)
   
 agency.agg <- aggregate (recipient.filter$fed_funding_amount, by=list(recipient.filter$agency_name, recipient.filter$county), FUN=sum, na.rm=TRUE)
 colnames(agency.agg)<- c("Agency", "County_Name", "Federal_Funding")
