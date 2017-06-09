@@ -17,10 +17,14 @@ geojson_url <- "https://raw.githubusercontent.com/DataCapstone/Data-Capstone/mas
 ny_counties <- geojson_read( geojson_url, what = "sp" )
 
 # what are the breaks
-bins <- c(0, 1000000, 5000000
-          , 10000000, 25000000, 50000000, 100000000, Inf)
-bin_pc <- c(0, 25, 50
-            , 100, 500, 1000, 2000, Inf)
+bins <- c(0, 2500000, 5500000, 10000000
+          , 20000000, 60000000, 250000000, Inf)
+bin_pc <- c( 0, 50 , 75, 100
+          , 150, 250, 400, Inf)
+#bins <- c(0, 1000000, 5000000
+#          , 10000000, 25000000, 50000000, 100000000, Inf)
+#bin_pc <- c(0, 25, 50
+#            , 100, 500, 1000, 2000, Inf)
 # Design a color palette for the map
 pal <- colorBin( palette = "YlGnBu"
                  , domain = ny_counties$federal_funding
