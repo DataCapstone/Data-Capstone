@@ -1,0 +1,123 @@
+---
+title: "table stuff"
+author: "Linnea Powell"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r}
+library(pander)
+library(dplyr)
+library(ggplot2)
+library(calibrate)
+library(plotly)
+library(stringr)
+```
+
+
+### Load Raw Data
+
+#### raw data for  NY grants
+```{r}
+# Read in raw data of 2016 grants in New York state with rds file
+rds_url <- "https://github.com/DataCapstone/Data-Capstone/blob/master/Raw-Data/NYgra16_counties_named.rds?raw=true"
+
+county.grantfunding<- readRDS( gzcon(url( rds_url ) ) )
+```
+
+#### clean up grant data
+```{r}
+# drop rows with negative funding values
+positive.grants <- subset (county.grantfunding, fed_funding_amount > 0)
+
+# Exclude funding going to state government
+ny.nonstategrants.dat <- subset (positive.grants, recipient_type != "00: State government")
+
+#select only project grants
+project.grants <- filter(ny.nonstategrants.dat, assistance_type %in% c("04: Project grant"))
+
+# select columns to work with
+smaller.project.grants<- subset (project.grants, select=c("Name", "assistance_type","recipient_type", "agency_name", "fed_funding_amount"))
+```
+
+#### raw data for county populations
+```{r}
+# Read in raw data of county populations to be able to calculate per capita funding
+rds_url2 <- "https://github.com/DataCapstone/Data-Capstone/blob/master/Raw-Data/NYcensus.rds?raw=true"
+
+pop.dat<- readRDS( gzcon(url( rds_url2 ) ) )
+
+pop.dat<- subset (pop.dat, select=c("county.name","Pop"))
+```
+
+### filter by recipient type
+```{r}
+recipient.filter <- filter(smaller.project.grants, recipient_type %in% c("20: Private higher education"))
+```
+
+### clean agency names a bit to be more consistent
+```{r}
+simpleCap <- function(x) {
+  s <- tolower(x) 
+  s <- strsplit(s, " ")[[1]] 
+  paste(toupper(substring(s, 1,1)), substring(s, 2), 
+  sep="", collapse=" ")
+} 
+recipient.filter$agency_name <-sapply(recipient.filter$agency_name, simpleCap)
+
+recipient.filter$agency_name<-gsub( "Department Of ", "", as.character(recipient.filter$agency_name), n)
+```
+
+### aggregate funding by agency
+```{r}
+agency.agg <- aggregate (recipient.filter$fed_funding_amount, by=list(recipient.filter$agency_name, recipient.filter$Name), FUN=sum, na.rm=TRUE)
+colnames(agency.agg)<- c("Agency", "County_Name", "Federal_Funding")
+```
+
+
+### adjust to per capita funding by agency
+
+```{r}
+
+agg.pop <- merge(agency.agg , pop.dat, by.x = "County_Name", by.y = "county.name", all.x=TRUE)
+
+agg.pop.percap <- mutate(agg.pop , percap =  Federal_Funding / Pop )
+```
+
+### filter by county and select columns
+```{r}
+county.filter <- filter(agg.pop.percap, County_Name %in% c("Onondaga", "Erie", "Queens"))
+county.filter.small <- subset (county.filter, select=c("County_Name", "Agency", "percap"))
+```
+
+### select highest values
+```{r}
+counties.percap.ordered<- county.filter.small[order(county.filter.small$percap), ]
+#agency.five <- tail(agency.agg, 5)
+
+selected<-counties.percap.ordered[unlist(tapply(row.names(counties.percap.ordered), counties.percap.ordered$County_Name, tail, n = 3)), ] 
+```
+
+### plot values
+```{r}
+
+   ggplot(selected, aes(Agency, percap)) + geom_bar(aes(fill = County_Name), 
+position = position_dodge(), stat="identity") +  facet_wrap(~County_Name)+
+   theme(legend.position="right", legend.title = 
+   element_blank(),axis.title.x=element_blank(), 
+   axis.title.y= element_blank()) + coord_flip()
+
+```
+
+
+
+
+
+
+
+
+
