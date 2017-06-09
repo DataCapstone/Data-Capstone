@@ -40,11 +40,21 @@ levels(gra16.3$recip_cat_type) <- c("Private firms",
                                 "Nonprofit agencies",
                                 "Other")
 
+# clean agency names a bit to be more consistent
+simpleCap <- function(x) {
+  s <- tolower(x) 
+  s <- strsplit(s, " ")[[1]] 
+  paste(toupper(substring(s, 1,1)), substring(s, 2), 
+  sep="", collapse=" ")
+} 
+gra16.3$agency_name <-sapply(gra16.3$agency_name, simpleCap)
+
+gra16.3$agency_name<-gsub( "Department Of ", "", as.character(gra16.3$agency_name), n)
 
 saveRDS( gra16.3, "columns_selected.rds" )
 
 
-hmm <- readRDS(gzcon(url("https://github.com/DataCapstone/Data-Capstone/blob/master/Raw-Data/NYcensus.rds?raw=true")))
+#hmm <- readRDS(gzcon(url("https://github.com/DataCapstone/Data-Capstone/blob/master/Raw-Data/NYcensus.rds?raw=true")))
 ```
 
 ```{r}
@@ -151,15 +161,17 @@ ui <- fluidPage(
       radioButtons(
         inputId = 'recipient',
           label='Select a recipient:',
-          choices = c('All', sort(unique(as.character(gra16.3$recip_cat_type)))),
-          selected = 'All'
+          choices = c( sort(unique(as.character(gra16.3$recip_cat_type))))
       ),
   
   plotOutput("percapPlot"), 
   
   plotOutput("recipientPlot"),
   
+  plotOutput("agencyPlot"),
+  
   dataTableOutput("cfdaTable")
+  
   
   ) 
 
@@ -209,6 +221,39 @@ agg.per <- agg.county(gra16.4, gra16.4$recip_cat_type)
 
 krzydonutzz(x= agg.per, values = "fund", labels = "var", multiple = "county", main = "Federal Project Grant Funding by Recipient", percent.cex = 3)
   
+})
+
+output$agencyPlot <- renderPlot({
+  
+recipient.filter <- filter(gra16.3, recip_cat_type == input$recipient)
+  
+agency.agg <- aggregate (recipient.filter$fed_funding_amount, by=list(recipient.filter$agency_name, recipient.filter$county), FUN=sum, na.rm=TRUE)
+colnames(agency.agg)<- c("Agency", "County_Name", "Federal_Funding")
+
+agg.pop <- merge(agency.agg , population, by.x = "County_Name", by.y = "county.name", all.x=TRUE)
+
+agg.pop.percap <- mutate(agg.pop , percap =  Federal_Funding / Pop )
+
+county.filter <- filter(agg.pop.percap, County_Name %in% input$your_county)
+county.filter.small <- subset (county.filter, select=c("County_Name", "Agency", "percap"))
+
+counties.percap.ordered<- county.filter.small[order(county.filter.small$percap), ]
+
+selected<-counties.percap.ordered[unlist(tapply(row.names(counties.percap.ordered), counties.percap.ordered$County_Name, tail, n = 3)), ] 
+
+   ggplot(selected, aes(Agency, percap)) + geom_bar(aes(fill = County_Name), 
+position = position_dodge(), stat="identity") +  facet_wrap(~County_Name)+
+   theme(legend.position="right", legend.title = 
+   element_blank(),axis.title.x=element_blank(), 
+   axis.title.y= element_blank()) + coord_flip()
+
+
+
+
+
+
+
+
 })
 
 
