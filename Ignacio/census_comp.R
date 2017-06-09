@@ -19,7 +19,7 @@ dat <- readRDS( gzcon(url("https://github.com/DataCapstone/Data-Capstone/blob/ma
 
 #only working with four comparatos and NY state
 #"Matches for Onondaga: 1.Broome, 2.St. Lawrence, 3.Orange, 4.Sullivan, 5.Monroe"
-x <- dat$county.name %in% c("Onondaga", "Broome", "St. Lawrence", "Sullivan", "State Average")
+x <- dat$county.name %in% c("Onondaga", "Broome", "St. Lawrence", "Sullivan", "Herkimer")
 dat <- dat[x,]
 dat$county.name <- factor(dat$county.name, ordered= TRUE)
 rownames(dat) <- 1:nrow(dat)

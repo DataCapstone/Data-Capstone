@@ -36,6 +36,7 @@ dat[,4]<- round(dat[,4]*100, digits = 1)
 
 ###########################################
 
+#now that the rds is on git hub we can call it.
 dat <- readRDS( gzcon(url("https://github.com/DataCapstone/Data-Capstone/blob/master/Raw-Data/NYcen_norm.RDS?raw=true")))
 
 #only working with four comparatos and NY state
@@ -106,7 +107,7 @@ geom_text(aes(x= (width.min+width.max)/2, y = x$mid, label = paste0(round(x$frac
           fontface = "bold",
           hjust = .5,
           vjust = .5,
-          colour = "white") +
+          colour = "white") 
 
 
 ##############################################
