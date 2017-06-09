@@ -1,6 +1,4 @@
 #
-# Author:   Cristian Nuno
-# Date:     June 8, 2017
 # Purpose:  Draft Dashboard
 #
 # Load necessary packages
@@ -32,6 +30,12 @@ source_github(ig_url)
 # import county overview 
 co_url <- "https://raw.githubusercontent.com/DataCapstone/Data-Capstone/master/Raw-Data/county_comparison_sw.r"
 source_github(co_url)
+
+# load the donutzz function using the RAW link
+source_github("https://raw.githubusercontent.com/icps86/Functions/master/krzycensuz.r")
+
+# normalized census
+NYcen_norm <- readRDS( gzcon(url("https://github.com/DataCapstone/Data-Capstone/blob/master/Raw-Data/NYcen_norm.RDS?raw=true")))
 
 ############ Building the Dashboard##################
 
@@ -126,6 +130,7 @@ tabItem(tabName = "County"
             choices = c( sort(unique(as.character(gra16.3$recip_cat_type))))
             )
           , shiny::plotOutput("percapPlot")
+          , shiny::plotOutput("censusPlot")
           , shiny::plotOutput("recipientPlot")
           , shiny::plotOutput("agencyPlot")
           , DT::dataTableOutput("cfdaTable")
@@ -231,7 +236,24 @@ server <- function(input, output) {
     
     
   }) # end of per capita plot
+
+  #
+  output$censusPlot <- shiny::renderPlot({
   
+    #################FORMATTING THE DF##########################
+    #only working with four comparatos and NY state
+    #"Matches for Onondaga: 1.Broome, 2.St. Lawrence, 3.Orange, 4.Sullivan, 5.Monroe"
+    x <- NYcen_norm$county.name %in% input$your_county
+    NYcen_norm_filter <- NYcen_norm[x,]
+    NYcen_norm_filter$county.name <- factor(NYcen_norm_filter$county.name, ordered= TRUE)
+    rownames(NYcen_norm_filter) <- 1:nrow(NYcen_norm_filter)
+    
+    #################### MAKING THE BARPLOT #######################
+    
+    krzycensuz(NYcen_norm_filter)
+    
+    })
+    
   #Bar agency plot 
   output$agencyPlot <- shiny::renderPlot({
     

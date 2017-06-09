@@ -15,18 +15,36 @@ source_github("https://raw.githubusercontent.com/icps86/Functions/master/krzycen
 
 #################FORMATTING THE DF##########################
 
-dat <- readRDS( gzcon(url("https://github.com/DataCapstone/Data-Capstone/blob/master/Raw-Data/NYcen_norm.RDS?raw=true")))
+NYcen_norm <- readRDS( gzcon(url("https://github.com/DataCapstone/Data-Capstone/blob/master/Raw-Data/NYcen_norm.RDS?raw=true")))
 
-#only working with four comparatos and NY state
-#"Matches for Onondaga: 1.Broome, 2.St. Lawrence, 3.Orange, 4.Sullivan, 5.Monroe"
-x <- dat$county.name %in% c("Onondaga", "Broome", "St. Lawrence", "Sullivan", "Herkimer")
-dat <- dat[x,]
-dat$county.name <- factor(dat$county.name, ordered= TRUE)
-rownames(dat) <- 1:nrow(dat)
+x <- NYcen_norm$county.name %in% c("Broome", "St. Lawrence", "Orange", "Sullivan", "Monroe")
+NYcen_norm_filter <- NYcen_norm[x,]
+NYcen_norm_filter$county.name <- factor(NYcen_norm_filter$county.name, ordered= TRUE)
+rownames(NYcen_norm_filter) <- 1:nrow(NYcen_norm_filter)
 
 #################### MAKING THE BARPLOT #######################
 
+krzycensuz(NYcen_norm_filter)
 
-krzycensuz(dat)
+#####function code######
 
-
+krzycensuz <- function (x)
+{
+  # Load Required Packages
+  require(ggplot2)
+  
+  #making pot
+  bars <- ggplot(x, aes(fill=county.name, height=.4, width=.03)) +
+    geom_vline(xintercept=0, color = "grey70", size=2, linetype = "solid") +
+    geom_tile(aes(x=x$Pop.n, y="Population"), stat="identity") +
+    geom_tile(aes(x=x$MHincome.n, y="Median HIncome"), stat="identity") + 
+    geom_tile(aes(x=x$pov.rate.n, y="Poverty Rate"), stat="identity") +
+    geom_hline(yintercept=c(2.5,1.5), size = 3, color = "white" ) +
+    theme(legend.position = "bottom",
+          axis.title = element_blank(),
+          panel.border = element_blank(),
+          legend.title = element_blank()) +
+    ggtitle(label= "County Demographics Comparison (normalized values)" ) 
+  return(bars)
+  
+}
