@@ -69,7 +69,7 @@ source_github <- function( url ) {
 }
 
 #load the donutzz function using the RAW link
-source_github("https://raw.githubusercontent.com/icps86/Functions/master/krzydonutzz")
+source_github("https://raw.githubusercontent.com/icps86/Functions/master/krzydonutzz.r") # added .r
 
 # National Aggregation
 

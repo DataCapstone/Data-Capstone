@@ -17,8 +17,8 @@ source_github <- function( url ) {
 } 
 
 #load the donutzz function using the RAW link
-source_github("https://raw.githubusercontent.com/icps86/Functions/master/krzydonutzz")
-source_github("https://raw.githubusercontent.com/icps86/Functions/master/donutzz.R")
+source_github("https://raw.githubusercontent.com/icps86/Functions/master/krzydonutzz.r") # test2
+source_github("https://raw.githubusercontent.com/icps86/Functions/master/donutzz.r") # test3
 
 ################ GETTING THE DATAFRAMES ######################
 
@@ -47,7 +47,7 @@ dat <- dat[c(1:6),]
 dat$Fed <- as.numeric(dat$Fed)
 dat <- arrange(dat, desc(Fed))
 
-#making the names smallerÑ
+#making the names smaller
 
 dat$maj_agency_cat <- c("Health and Human Services", "Others", "Transportation", "Housing and Urban Development",
                         "National Science Foundation", "Homeland Security")
