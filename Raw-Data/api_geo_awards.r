@@ -65,7 +65,7 @@ GET_all_pages <- function( PATH, QUERY ) {
     page_number <- page_number + 1
   }
   # once all the pages have been collected,
-  data_api_data <- rbind.pages(pages)
+  data_api_data <- rbind_pages(pages) # rbind.pages() is deprecated
   # return what we've collected
   return( data_api_data )
   
