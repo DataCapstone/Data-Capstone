@@ -48,3 +48,4 @@ krzycensuz <- function (x)
   return(bars)
   
 }
+# June 12, 2017
