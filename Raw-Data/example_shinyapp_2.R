@@ -127,17 +127,20 @@ body <- dashboardBody(
               ) # end of row 1
               , h3("Let's Examine Which Federal Agencies Are Distributing Funds\nand What Type of Organizations are Receiving these Funds.\n Please note that these funds do not include the federal grants which were awarded to the state government.") # blank space
               , fluidRow(
-                column( width = 6
-                        , box( title = "Percentage of Total Federal Funds by Federal Agency", status = "primary",
-                               solidHeader = TRUE, collapsible = FALSE, width = NULL
-                               #, background = "fuchsia"
-                               , shiny::plotOutput("donut1") ) # end of box 1
+                column( width = 2
+                        , box( title = "County Exploration", status = "primary"
+                               , solidHeader = TRUE, collapsible = FALSE, width = NULL
+                               , selectizeInput(
+                                 inputId='county',
+                                 label='Select a county:',
+                                 choices= sort(unique(gra16.3$county)),
+                                 selected=c("Onondaga")
+                               ) ) # end of box 1
                 ) # end of column 1
-                , column( width = 6
-                          , box( title = "Percentage of Total Federal Funds by Recipient Type", status = "primary",
+                , column( width = 10
+                          , box( title = "Flow of Funds from the Top 10 Agencies in County", status = "primary",
                                  solidHeader = TRUE, collapsible = FALSE, width = NULL
-                                 #, background = "maroon"
-                                 , shiny::plotOutput("donut2") ) # end of box 2
+                                 , sankeyNetworkOutput( "sankey" ) ) # end of box 2
                 ) # end of column 2
                 
               ) # end of row 2
@@ -247,16 +250,18 @@ server <- function(input, output) {
     
   }) # end of render datatable
   
-  #### State Overview Donut1 Plot Output ####
-  # Render Donut1 Plot
-  output$donut1 <- shiny::renderPlot(
-    maj_agency_donut
-  )
-  #### State Overview Donut2 Plot Output ####
-  # Render Donut2 Plot
-  output$donut2 <- shiny::renderPlot(
-    recipient_cat_donut
-  )
+  
+  
+  output$sankey <- renderSankeyNetwork({
+    
+    
+    df <- dplyr::filter( gra16.3, county == input$county )
+    
+    df.2 <- sankeyPrep(df)
+    
+    sanktify( df.2 )
+    
+  })
   #######################################
   #### County Overview Shiny Elements####
   #######################################
