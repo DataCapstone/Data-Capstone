@@ -28,6 +28,8 @@ library( ggplot2 )
 library( igraph )
 library( networkD3 )
 library( rCharts )
+# normalized census
+NYcen_norm <- readRDS( gzcon(url("https://github.com/DataCapstone/Data-Capstone/blob/master/Raw-Data/NYcen_norm.RDS?raw=true")))
 
 # Import data from github function
 source_github <- function( url ) {
