@@ -16,6 +16,7 @@ fancy_table <- datatable( select( ny_counties@data
                                   , funding_per_capita
 )
   , rownames = FALSE
+  , caption = "FY16 New York County Total Federal Grant Funding"
   , colnames = c("County Name", "Total Federal Grant Funding Received", "Total Per Capita Federal Grant Funding Received")
   , options = list(lengthChange = FALSE)
   ) %>% # end of creating datatable
