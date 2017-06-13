@@ -39,9 +39,13 @@ source_github(co_url)
 # load the donutzz function using the RAW link
 census_url <- "https://raw.githubusercontent.com/icps86/Functions/master/krzycensuz.r"
 source_github( census_url )
+
 # normalized census
 NYcen_norm <- readRDS( gzcon(url("https://github.com/DataCapstone/Data-Capstone/blob/master/Raw-Data/NYcen_norm.RDS?raw=true")))
 
+# import small multiples aggregated data
+agg_url <- "https://raw.githubusercontent.com/DataCapstone/Data-Capstone/master/Linnea/small%20multiples%20aggregated%20data.R"
+source_github(agg_url)
 
 ############ Building the Dashboard##################
 
@@ -308,46 +312,6 @@ server <- function(input, output) {
   
 output$smallMultiples <- renderPlot({
 
-  #get only project grants
-  gra16.4<- filter(gra16.3 , assistance_type== "04: Project grant")
-  
-  # drop rows with negative funding values
-  gra16.4 <- subset (gra16.4, fed_funding_amount > 0)
-
-  #Load the population data
-  pop.dat <- population[ c("county.name", "Pop") ]
-  pop.dat.state <- rbind(pop.dat, data.frame(county.name="State Average", Pop=sum(pop.dat$Pop)))
-  
-  gra16.4$maj_agency_cat<- as.character(gra16.4$maj_agency_cat)
-  
-  ny.agency.agg <- aggregate (gra16.4$fed_funding_amount, by=list(gra16.4$recip_cat_type, gra16.4$maj_agency_cat), FUN=sum, na.rm=TRUE)
-  
-  colnames(ny.agency.agg)<- c("Recipient_Type", "Agency", "Federal_Funding")
-  
-  ny.agency.agg["county"] <- "State Average"
-  
-  colnames(ny.agency.agg)<- c("Recipient_Type", "Agency", "Federal_Funding", "County")
-  
-  county.agency.agg <- aggregate (gra16.4$fed_funding_amount, by=list(gra16.4$recip_cat_type, gra16.4$maj_agency_cat, gra16.4$county), FUN=sum, na.rm=TRUE)
-  
-  
-  colnames(county.agency.agg)<- c("Recipient_Type", "Agency", "County", "Federal_Funding")
-  
-  agency.agg <- rbind(ny.agency.agg, county.agency.agg)
- 
-  ### adjust to per capita funding by agency 
- 
-  agg.pop <- merge(agency.agg , pop.dat.state, by.x = "County", by.y = "county.name", all.x=TRUE)
-  
-  agg.pop.percap <- mutate(agg.pop , percap =  Federal_Funding / Pop )
-  
-  agg.pop.percap<- agg.pop.percap[order(agg.pop.percap$Agency), ]
-  
-  # round percap to display better
-  agg.pop.percap <- mutate(agg.pop.percap, percap = round(percap, 2))
-  
-  #drop agencies with less than 10 rows
-  agg.pop.percap<-agg.pop.percap[as.numeric(ave(agg.pop.percap$Agency, agg.pop.percap$Agency, FUN=length)) >= 10, ]
   
   #filter by county
   county.filter <- filter(agg.pop.percap, County %in% input$your_county)
