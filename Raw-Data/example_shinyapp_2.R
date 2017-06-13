@@ -132,8 +132,8 @@ body <- dashboardBody(
                                , selectizeInput(
                                  inputId='county',
                                  label='Select a county:',
-                                 choices= sort(unique(gra16.3$county)),
-                                 selected=c("Onondaga")
+                                 choices= c("NY State", sort(unique(gra16.3$county))),
+                                 selected=c("NY State")
                                ) ) # end of box 1
                 ) # end of column 1
                 , column( width = 10
@@ -284,12 +284,23 @@ server <- function(input, output) {
   
   output$sankey <- renderSankeyNetwork({
     
-    
-    df <- dplyr::filter( gra16.3, county == input$county )
-    
-    df.2 <- sankeyPrep(df)
-    
-    sanktify( df.2 )
+    if (input$county == "NY State") {
+      
+      df <- gra16.3
+      
+      df.2 <- sankeyPrep(df)
+      
+      sanktify( df.2 )  
+      
+    } else {
+      
+      df <- dplyr::filter( gra16.3, county == input$county )
+      
+      df.2 <- sankeyPrep(df)
+      
+      sanktify( df.2 )
+      
+    }
     
   })
   #######################################
