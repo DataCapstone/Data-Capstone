@@ -105,5 +105,5 @@ ny_map <- leaflet(ny_counties) %>%
   # add zoom out button
   addEasyButton( easyButton(
     icon = "ion-android-globe", title = "Zoom Back Out"
-    , onClick = JS("function(btn, map){ map.setZoom(7); }")
+    , onClick = leaflet::JS("function(btn, map){ map.setZoom(7); }")
   ) )
