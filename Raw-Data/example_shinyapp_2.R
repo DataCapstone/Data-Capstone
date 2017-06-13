@@ -179,24 +179,6 @@ body <- dashboardBody(
               ) # end of column 4
             ) # end of row 2
             , fluidRow(
-              column( width = 2
-                      , box( title = "Recipient Selection", status = "primary"
-                             , solidHeader = TRUE, collapsible = FALSE, width = NULL
-                             , radioButtons(
-                               inputId = 'recipient',
-                               label='Select a recipient:',
-                               choices = c( sort(unique(as.character(gra16.3$recip_cat_type))))
-                             ) # end of radio buttons
-                      ) # end of box 5
-              ) # end of column 5
-              , column( width = 10
-                        , box( title = "Top Awarding Federal Agencies Per Capita Spending", status = "primary"
-                               , solidHeader = TRUE, collapsible = FALSE, width = NULL
-                               , shiny::plotOutput("agencyPlot")
-                        ) # end of box 6
-              ) # end of column 6
-            ) # end of row 3
-            , fluidRow(
               column( width = 12
                       , box( title = "Federal Spending Details", status = "primary"
                              , solidHeader = TRUE, collapsible = FALSE, width = NULL
@@ -323,48 +305,12 @@ server <- function(input, output) {
     
   }) # end of census plot
   
-  #Bar agency plot 
-  output$agencyPlot <- shiny::renderPlot({
-    
-    
-    recipient.filter <- filter(gra16.3, recip_cat_type == input$recipient, assistance_type == "04: Project grant" , fed_funding_amount > 0)
-    
-    agency.agg <- aggregate (recipient.filter$fed_funding_amount, by=list(recipient.filter$agency_name, recipient.filter$county), FUN=sum, na.rm=TRUE)
-    colnames(agency.agg)<- c("Agency", "County_Name", "Federal_Funding")
-    
-    agg.pop <- merge(agency.agg , population, by.x = "County_Name", by.y = "county.name", all.x=TRUE)
-    
-    agg.pop.percap <- mutate(agg.pop , percap =  Federal_Funding / Pop )
-    
-    county.filter <- filter(agg.pop.percap, County_Name %in% input$your_county)
-    county.filter.small <- subset (county.filter, select=c("County_Name", "Agency", "percap"))
-    
-    counties.percap.ordered<- county.filter.small[order(county.filter.small$percap), ]
-    
-    selected<-counties.percap.ordered[unlist(tapply(row.names(counties.percap.ordered), counties.percap.ordered$County_Name, tail, n = 3)), ] 
-    
-    ggplot(selected, aes(Agency, percap)) + geom_bar(aes(fill = County_Name), 
-                                                     position = position_dodge(), stat="identity") +  facet_wrap(~County_Name, ncol = 4)+
-      theme(legend.position="right", legend.title = 
-              element_blank(),axis.title.x=element_blank(), 
-            axis.title.y= element_blank()) + coord_flip()
-    
-    
-    
-  })
+
   
-  #Donut recipient plot 
-  output$recipientPlot <- shiny::renderPlot({
-    
-    
-    gra16.4 <- filter(gra16.3 , county %in% input$your_county , assistance_type == "04: Project grant" , fed_funding_amount > 0) #just care about incoming funds for project grants
-    
-    agg.per <- agg.county(gra16.4, gra16.4$recip_cat_type)
-    
-    krzydonutzz(x= agg.per, values = "fund", labels = "var", multiple = "county", main = "", percent.cex = 3, columns = 4)
-    
-    
-  })
+  
+  
+  
+  
   
   
   output$cfdaTable <- DT::renderDataTable({
