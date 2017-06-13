@@ -10,8 +10,6 @@ library(shiny)
 # Download the data, clean
 gra16.named <- readRDS(gzcon(url("https://github.com/DataCapstone/Data-Capstone/blob/master/Raw-Data/NYgra16_counties_named.rds?raw=true")))
 
-#codes <- read.csv("https://raw.githubusercontent.com/DataCapstone/Data-Capstone/master/Raw-Data/countycodesNY.csv")
-
 #exclude money going to state government and choose only project grants
 gra16.without.state <- dplyr::filter( gra16.named , recipient_type != "00: State government" )
 
@@ -29,10 +27,10 @@ gra16.3$recip_cat_type[y] <- "h: Private agencies"
 #making recip_cat_type into a factor and changing the levels into more friendly ones
 gra16.3$recip_cat_type <- factor(x= gra16.3$recip_cat_type)
 
-levels(gra16.3$recip_cat_type) <- c("Private firms",
+levels(gra16.3$recip_cat_type) <- c("Private Firm",
                                     "Government",
                                     "Higher Ed",
-                                    "Nonprofit agencies",
+                                    "Nonprofit",
                                     "Other")
 
 # clean agency names a bit to be more consistent
