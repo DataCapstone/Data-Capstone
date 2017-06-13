@@ -325,13 +325,13 @@ server <- function(input, output) {
     
     gra16.agg.3 <- rbind(gra16.agg.2 , ny.per.2)
     
-    cols <- c("#00CCFF","#3333FF")
+    cols <- c("#EBEBEB", "#649EFC")
     
     ggplot(gra16.agg.3, aes(x = county, y = percap, fill = assistance_type.2)) + 
       geom_bar(stat = "identity") + 
       labs(x="County", y="Per Capita Funding") +
       # ggtitle("Per Capita Federal Funding by County") +
-      scale_y_continuous(labels = scales::comma) + 
+      scale_y_continuous(labels = scales::dollar_format(prefix="$", big.mark = ",")) + 
       scale_fill_manual(values = cols) +   
       theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
             panel.background = element_blank(), axis.line = element_blank() , legend.title = element_blank())
@@ -363,7 +363,7 @@ server <- function(input, output) {
     county.filter <- filter(agg.pop.percap, County %in% input$your_county)
     
     
-    ggplot(county.filter, aes(x=County, y= percap)) + geom_bar( aes(fill=County), stat="identity")+ scale_y_continuous(position = "right")+ facet_grid(Agency ~ Recipient_Type, switch="y") + theme_minimal() + theme (strip.text.y = element_text(size=12, angle = 180), strip.text.x = element_text(size=12), plot.title = element_text(size=16), plot.subtitle = element_text(size=13), legend.position="top", legend.title = element_blank(), axis.title.x=element_blank(), legend.key.size = unit(.5, "line"), legend.text=element_text(size=12),
+    ggplot(county.filter, aes(x=County, y= percap)) + geom_bar( aes(fill=County), stat="identity")+ scale_y_continuous(position = "right", labels = scales::dollar_format(prefix="$", big.mark = ","))+ facet_grid(Agency ~ Recipient_Type, switch="y") + theme_minimal() + theme (strip.text.y = element_text(size=12, angle = 180), strip.text.x = element_text(size=12), plot.title = element_text(size=16), plot.subtitle = element_text(size=13), legend.position="top", legend.title = element_blank(), axis.title.x=element_blank(), legend.key.size = unit(.5, "line"), legend.text=element_text(size=12),
                                                                              axis.title.y= element_blank(), axis.ticks=element_blank(), axis.text.x= element_blank(), panel.background = element_rect(colour = 'gray80'),panel.grid.minor = element_blank(), panel.grid.major =element_blank())
     
     
