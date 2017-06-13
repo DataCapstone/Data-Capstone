@@ -42,7 +42,16 @@ GET_all_pages <- function( PATH, QUERY ) {
   # Set initial page number
   page_number <- 1
   
+  # conditional element selection
+  # if results page is does not have a next page
+  # return a data frame for these results
+  if( this.clean.resp$page_metadata$has_next_page == FALSE ){
+      return( this.clean.resp$results)
+    }
   # while loop with boolean condition
+  # if the results page contains a next page
+  # call the next page and bind the results to a data frame
+  # return the data frame with all the page results
   while( this.clean.resp$page_metadata$has_next_page == TRUE ) {
     # identify current page url
     current.page.url <- this.clean.resp$page_metadata$current
