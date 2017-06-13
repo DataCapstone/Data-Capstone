@@ -158,7 +158,7 @@ body <- dashboardBody(
                                inputId='your_county', 
                                label='Select up to 4 counties to compare:', 
                                choices= sort(unique(gra16.3$county)),
-                               selected=c("Onondaga"), 
+                               selected=c("Onondaga", "Herkimer", "Erie"), 
                                multiple = TRUE, 
                                options = list(maxItems = 4)
                              ) ) # end of box 1
