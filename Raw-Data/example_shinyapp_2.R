@@ -177,10 +177,10 @@ body <- dashboardBody(
             ) # end of row 1
             , fluidRow(
               column( width = 12
-                      , box( title = "Federal Project Grant Funding by County, Agency, and Recipient"
+                      , box( title = "Per Capita Federal Project Grant Funding by County, Agency, and Recipient"
                              , status = "primary", solidHeader = TRUE, collapse = FALSE
                              , width = NULL
-                             , shiny::plotOutput("smallMultiples")
+                             , shiny::plotOutput("smallMultiples", height = 1800)
                       ) # end of box 4
               ) # end of column 4
             ) # end of row 2
@@ -363,10 +363,8 @@ server <- function(input, output) {
     county.filter <- filter(agg.pop.percap, County %in% input$your_county)
     
     
-    ggplot(county.filter, aes(x=County, y= percap)) + geom_bar( aes(fill=County), stat="identity")  + facet_grid(Agency ~ Recipient_Type, switch="y")+
-      labs(title="Federal Project Grant Funding by County, Agency, and Recipient", 
-           subtitle="Per Capita Funding, FY 2016")+ theme_minimal() + theme (strip.text.y = element_text(size=12, angle = 180), strip.text.x = element_text(size=12), plot.title = element_text(size=16), plot.subtitle = element_text(size=13), legend.position="top", legend.title = element_blank(), axis.title.x=element_blank(), legend.key.size = unit(.5, "line"), legend.text=element_text(size=12),
-                                                                             axis.title.y= element_blank(), axis.ticks=element_blank(), axis.text.x= element_blank(),  axis.text.y= element_blank(), panel.background = element_rect(colour = 'gray80'),panel.grid.minor = element_blank(), panel.grid.major =element_blank())
+    ggplot(county.filter, aes(x=County, y= percap)) + geom_bar( aes(fill=County), stat="identity")+ scale_y_continuous(position = "right")+ facet_grid(Agency ~ Recipient_Type, switch="y") + theme_minimal() + theme (strip.text.y = element_text(size=12, angle = 180), strip.text.x = element_text(size=12), plot.title = element_text(size=16), plot.subtitle = element_text(size=13), legend.position="top", legend.title = element_blank(), axis.title.x=element_blank(), legend.key.size = unit(.5, "line"), legend.text=element_text(size=12),
+                                                                             axis.title.y= element_blank(), axis.ticks=element_blank(), axis.text.x= element_blank(), panel.background = element_rect(colour = 'gray80'),panel.grid.minor = element_blank(), panel.grid.major =element_blank())
     
     
   })
