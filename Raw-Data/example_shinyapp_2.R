@@ -8,6 +8,7 @@
 # library( Cairo )
 library( shiny )
 library( shinydashboard )
+library(ggthemes)
 
 # Import data from github function
 source_github <- function( url ) {
@@ -171,10 +172,10 @@ body <- dashboardBody(
             ) # end of row 1
             , fluidRow(
               column( width = 12
-                      , box( title = "Federal Project Grant Funding by Recipient"
+                      , box( title = "Federal Project Grant Funding by County, Agency, and Recipient"
                              , status = "primary", solidHeader = TRUE, collapse = FALSE
                              , width = NULL
-                             , shiny::plotOutput("recipientPlot")
+                             , shiny::plotOutput("smallMultiples")
                       ) # end of box 4
               ) # end of column 4
             ) # end of row 2
@@ -305,7 +306,60 @@ server <- function(input, output) {
     
   }) # end of census plot
   
+output$smallMultiples <- renderPlot({
 
+  #get only project grants
+  gra16.4<- filter(gra16.3 , assistance_type== "04: Project grant")
+  
+  # drop rows with negative funding values
+  gra16.4 <- subset (gra16.4, fed_funding_amount > 0)
+
+  #Load the population data
+  pop.dat <- population[ c("county.name", "Pop") ]
+  pop.dat.state <- rbind(pop.dat, data.frame(county.name="State Average", Pop=sum(pop.dat$Pop)))
+  
+  gra16.4$maj_agency_cat<- as.character(gra16.4$maj_agency_cat)
+  
+  ny.agency.agg <- aggregate (gra16.4$fed_funding_amount, by=list(gra16.4$recip_cat_type, gra16.4$maj_agency_cat), FUN=sum, na.rm=TRUE)
+  
+  colnames(ny.agency.agg)<- c("Recipient_Type", "Agency", "Federal_Funding")
+  
+  ny.agency.agg["county"] <- "State Average"
+  
+  colnames(ny.agency.agg)<- c("Recipient_Type", "Agency", "Federal_Funding", "County")
+  
+  county.agency.agg <- aggregate (gra16.4$fed_funding_amount, by=list(gra16.4$recip_cat_type, gra16.4$maj_agency_cat, gra16.4$county), FUN=sum, na.rm=TRUE)
+  
+  
+  colnames(county.agency.agg)<- c("Recipient_Type", "Agency", "County", "Federal_Funding")
+  
+  agency.agg <- rbind(ny.agency.agg, county.agency.agg)
+ 
+  ### adjust to per capita funding by agency 
+ 
+  agg.pop <- merge(agency.agg , pop.dat.state, by.x = "County", by.y = "county.name", all.x=TRUE)
+  
+  agg.pop.percap <- mutate(agg.pop , percap =  Federal_Funding / Pop )
+  
+  agg.pop.percap<- agg.pop.percap[order(agg.pop.percap$Agency), ]
+  
+  # round percap to display better
+  agg.pop.percap <- mutate(agg.pop.percap, percap = round(percap, 2))
+  
+  #drop agencies with less than 10 rows
+  agg.pop.percap<-agg.pop.percap[as.numeric(ave(agg.pop.percap$Agency, agg.pop.percap$Agency, FUN=length)) >= 10, ]
+  
+  #filter by county
+  county.filter <- filter(agg.pop.percap, County %in% input$your_county)
+  
+  
+  ggplot(county.filter, aes(x=County, y= percap)) + geom_bar( aes(fill=County), stat="identity")  + facet_grid(Agency ~ Recipient_Type, switch="y")+
+    labs(title="Federal Project Grant Funding by County, Agency, and Recipient", 
+         subtitle="Per Capita Funding, FY 2016")+ theme_minimal() + theme (strip.text.y = element_text(size=12, angle = 180), strip.text.x = element_text(size=12), plot.title = element_text(size=16), plot.subtitle = element_text(size=13), legend.position="top", legend.title = element_blank(), axis.title.x=element_blank(), legend.key.size = unit(.5, "line"), legend.text=element_text(size=12),
+                                                                           axis.title.y= element_blank(), axis.ticks=element_blank(), axis.text.x= element_blank(),  axis.text.y= element_blank(), panel.background = element_rect(colour = 'gray80'),panel.grid.minor = element_blank(), panel.grid.major =element_blank())
+
+  
+})
   
   
   
