@@ -8,7 +8,7 @@ library( shiny )
 library( dplyr )
 # Download the data, clean
 # from RDS
-gra16.3_url <- "https://github.com/DataCapstone/Data-Capstone/blob/master/Stephanie/columns_selected.3.rds?raw=true"
+gra16.3_url <- "https://github.com/DataCapstone/Data-Capstone/blob/master/columns_selected.3?raw=true"
 gra16.3 <- readRDS( gzcon( url( gra16.3_url )))
 #Load the population data
 population <- readRDS(gzcon(url("https://github.com/DataCapstone/Data-Capstone/blob/master/Raw-Data/NYcensus.rds?raw=true")))
