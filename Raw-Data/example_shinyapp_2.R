@@ -12,7 +12,7 @@
 library( shiny )
 library( shinydashboard )
 library( leaflet )
-library(geojsonio )
+library( geojsonio )
 library( magrittr )
 library( scales )
 library( htmltools )
@@ -28,6 +28,7 @@ library( ggplot2 )
 library( igraph )
 library( networkD3 )
 library( rCharts )
+library( ggthemes )
 
 # Import data from github function
 source_github <- function( url ) {
