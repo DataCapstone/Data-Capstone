@@ -10,8 +10,8 @@ library( magrittr )
 library( dplyr )
 
 # Create the data table
-fancy_table2 <- reactive({
-                            datatable( filter(gra16.3
+fancy_table2 <- shiny::reactive({
+                            DT::datatable( filter(gra16.3
                                   , county %in% input$your_county, assistance_type == "04: Project grant"
                                   , fed_funding_amount > 0, recip_cat_type == input$recipient
                                   , maj_agency_cat == input$maj
@@ -44,7 +44,7 @@ fancy_table2 <- reactive({
                        , pageLength = 50
   ) %>% # end of creating datatable
    formatCurrency(columns = "federal_funding" )
-                                      }) # end of reactive function
+ }) # end of reactive function
     
     
     
