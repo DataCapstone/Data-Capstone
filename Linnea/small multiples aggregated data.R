@@ -17,7 +17,9 @@ gra16.without.state <- filter(gra16.named , recipient_type != "00: State governm
 gra16.2 <- mutate(gra16.without.state, county = as.character(Name))
 
 #note, changed from agency_name with 72 options to maj_agency_cat with 26!, also dropped columns I didn't need
-gra16.3 <- gra16.2[ c("recip_cat_type", "county" , "fed_funding_amount" ,  "maj_agency_cat", "assistance_type" ) ]
+# gra16.3 <- gra16.2[ c("recip_cat_type", "county" , "fed_funding_amount" ,  "maj_agency_cat", "assistance_type" ) ]
+# added two columns: recipient_name + cfda_program_title
+gra16.3 <- gra16.2[ c("county" , "fed_funding_amount" , "agency_name",  "recipient_name", "recip_cat_type", "cfda_program_title") ]
 
 x <- gra16.3$recip_cat_type == "i: Private agencies"
 gra16.3$recip_cat_type[x] <- "f: Private agencies"
