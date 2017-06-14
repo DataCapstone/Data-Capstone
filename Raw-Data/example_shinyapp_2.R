@@ -152,6 +152,14 @@ body <- dashboardBody(
                        ) # end of box 3
                ) # end of column 3
              ) # end of row 3
+             , fluidRow(
+                column( width = 12
+                      , box( title = "All FY16 Federal Grants by County", status = "primary"
+                             , solidHeader = TRUE, collapsible = FALSE, width = NULL
+                             , DT::dataTableOutput("countyTbl")
+                             ) # end of box
+              ) # end of column
+            ) # end of row
              
     ) # end of second tab
     , # Third tab content
@@ -396,6 +404,29 @@ server <- function(input, output) {
       color = "green"
     )
   })
+  
+  # create all county datatable
+  output$countyTbl <- DT::renderDataTable({
+    if( input$county == "NY State"){
+      # filter only positive outlays
+      # do not filter by county
+      gra16.all <- filter( gra16.3, fed_funding_amount > 0 )
+      # display the table
+      gra16.all
+    } else {
+      # filter only positive outlays
+      # do filter by county
+      gra16.all <- filter(gra16.3, county %in% input$county
+                          #, assistance_type == "04: Project grant"
+                          , fed_funding_amount > 0
+                          #, recip_cat_type == input$recipient
+                          #, maj_agency_cat == input$maj
+      )
+      # call the table
+      gra16.all
+    } # end of else
+  })
+  
   
   #######################################
   #### County Overview Shiny Elements####
