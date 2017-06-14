@@ -10,7 +10,12 @@ library( magrittr )
 library( dplyr )
 
 # Create the data table
-fancy_table2 <- datatable( gra16.4
+fancy_table2 <- reactive({
+                            datatable( filter(gra16.3
+                                  , county %in% input$your_county, assistance_type == "04: Project grant"
+                                  , fed_funding_amount > 0, recip_cat_type == input$recipient
+                                  , maj_agency_cat == input$maj
+                                 ) 
                          , rownames = FALSE
                          , caption = "FY16 Federal Spending Project Details"
   , colnames = c("County Name", "Total Federal Grant Funding Received"
@@ -39,7 +44,7 @@ fancy_table2 <- datatable( gra16.4
                        , pageLength = 50
   ) %>% # end of creating datatable
    formatCurrency(columns = "federal_funding" )
-    
+                                      }) # end of reactive function
     
     
     
