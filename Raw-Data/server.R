@@ -91,14 +91,121 @@ server <- function(input, output) {
   
   output$sankey <- renderSankeyNetwork({
     
-    
-    df <- dplyr::filter( gra16.3, county == input$county )
-    
-    df.2 <- sankeyPrep(df)
-    
-    sanktify( df.2 )
+    if (input$county == "NY State") {
+      
+      df <- gra16.3
+      
+      df.2 <- sankeyPrep(df)
+      
+      sanktify( df.2 )  
+      
+    } else {
+      
+      df <- dplyr::filter( gra16.3, county == input$county )
+      
+      df.2 <- sankeyPrep(df)
+      
+      sanktify( df.2 )
+      
+    }
     
   })
+  
+  output$top <- renderInfoBox({
+    
+    top.rec <- aggregate(gra16.3$fed_funding_amount, by= list(gra16.3$recipient_name, gra16.3$county), FUN = sum)
+    
+    if (input$county == "NY State") {
+      
+      top.rec.2 <- top.rec
+      top.rec.3 <- arrange(top.rec.2 , desc(x))
+      top <- top.rec.3[1,]$Group.1
+      
+    } else {
+      
+      top.rec.2 <- filter(top.rec , Group.2 == input$county)
+      top.rec.3 <- arrange(top.rec.2 , desc(x))
+      top <- top.rec.3[1,]$Group.1
+      
+    }
+    
+    infoBox(
+      paste0(top), "Top Recipient", icon = icon("users"),
+      color = "aqua"
+    )
+  })
+  
+  output$top.dollars <- renderInfoBox({
+    
+    top.rec <- aggregate(gra16.3$fed_funding_amount, by= list(gra16.3$recipient_name, gra16.3$county), FUN = sum)
+    
+    if (input$county == "NY State") {
+      
+      top.rec.2 <- top.rec
+      top.rec.3 <- arrange(top.rec.2 , desc(x))
+      top.dollars <- top.rec.3[1,]$x
+      
+    } else {
+      
+      top.rec.2 <- filter(top.rec , Group.2 == input$county)
+      top.rec.3 <- arrange(top.rec.2 , desc(x))
+      top.dollars <- top.rec.3[1,]$x
+      
+    }
+    
+    infoBox(
+      paste0("$", prettyNum(top.dollars, big.mark = ",")), "Top Recipient Funding", icon = icon("credit-card"),
+      color = "purple"
+    )
+  })
+  
+  output$top.num <- renderInfoBox({
+    
+    top.rec.num <- aggregate(gra16.3$fed_funding_amount, by= list(gra16.3$recipient_name, gra16.3$county), FUN = length )
+    
+    if (input$county == "NY State") {
+      
+      top.rec.num.2 <- top.rec.num
+      top.rec.num.3 <- arrange(top.rec.num.2 , desc(x))
+      top.num <- top.rec.num.3[1,]$x  
+      
+    } else {
+      
+      top.rec.num.2 <- filter(top.rec.num , Group.2 == input$county)
+      top.rec.num.3 <- arrange(top.rec.num.2 , desc(x))
+      top.num <- top.rec.num.3[1,]$x
+      
+    }
+    
+    infoBox(
+      paste0(top.num), "Top Recipient Number of Transactions", icon = icon("list"),
+      color = "green"
+    )
+  })
+  
+  # create all county datatable
+  output$countyTbl <- DT::renderDataTable({
+    if( input$county == "NY State"){
+      # filter only positive outlays
+      # do not filter by county
+      gra16.all <- filter( gra16.3, fed_funding_amount > 0 )
+      # display the table
+      gra16.all
+    } else {
+      # filter only positive outlays
+      # do filter by county
+      gra16.all <- filter(gra16.3, county %in% input$county
+                          #, assistance_type == "04: Project grant"
+                          , fed_funding_amount > 0
+                          #, recip_cat_type == input$recipient
+                          #, maj_agency_cat == input$maj
+      )
+      # call the table
+      gra16.all
+    } # end of else
+  })
+  
+  
   #######################################
   #### County Overview Shiny Elements####
   #######################################
@@ -121,13 +228,13 @@ server <- function(input, output) {
     
     gra16.agg.3 <- rbind(gra16.agg.2 , ny.per.2)
     
-    cols <- c("#00CCFF","#3333FF")
+    cols <- c("#EBEBEB", "#649EFC")
     
     ggplot(gra16.agg.3, aes(x = county, y = percap, fill = assistance_type.2)) + 
       geom_bar(stat = "identity") + 
       labs(x="County", y="Per Capita Funding") +
       # ggtitle("Per Capita Federal Funding by County") +
-      scale_y_continuous(labels = scales::comma) + 
+      scale_y_continuous(labels = scales::dollar_format(prefix="$", big.mark = ",")) + 
       scale_fill_manual(values = cols) +   
       theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
             panel.background = element_blank(), axis.line = element_blank() , legend.title = element_blank())
@@ -159,10 +266,8 @@ server <- function(input, output) {
     county.filter <- filter(agg.pop.percap, County %in% input$your_county)
     
     
-    ggplot(county.filter, aes(x=County, y= percap)) + geom_bar( aes(fill=County), stat="identity")  + facet_grid(Agency ~ Recipient_Type, switch="y")+
-      labs(title="Federal Project Grant Funding by County, Agency, and Recipient", 
-           subtitle="Per Capita Funding, FY 2016")+ theme_minimal() + theme (strip.text.y = element_text(size=12, angle = 180), strip.text.x = element_text(size=12), plot.title = element_text(size=16), plot.subtitle = element_text(size=13), legend.position="top", legend.title = element_blank(), axis.title.x=element_blank(), legend.key.size = unit(.5, "line"), legend.text=element_text(size=12),
-                                                                             axis.title.y= element_blank(), axis.ticks=element_blank(), axis.text.x= element_blank(),  axis.text.y= element_blank(), panel.background = element_rect(colour = 'gray80'),panel.grid.minor = element_blank(), panel.grid.major =element_blank())
+    ggplot(county.filter, aes(x=County, y= percap)) + geom_bar( aes(fill=County), stat="identity")+ scale_y_continuous(position = "right", labels = scales::dollar_format(prefix="$", big.mark = ","))+ facet_grid(Agency ~ Recipient_Type, switch="y") + labs(caption = "*This chart excludes negative outlays as well as agencies that had less than 10 entries total across recipient types and counties.") + theme_minimal() + theme (strip.text.y = element_text(size=12, angle = 180), strip.text.x = element_text(size=12), plot.title = element_text(size=16), plot.subtitle = element_text(size=13), legend.position="top", legend.title = element_blank(), axis.title.x=element_blank(), legend.key.size = unit(.5, "line"), legend.text=element_text(size=12),
+                                                                                                                                                                                                                                                                                                                                                                                                                                          axis.title.y= element_blank(), axis.ticks=element_blank(), axis.text.x= element_blank(), panel.background = element_rect(colour = 'gray80'),panel.grid.minor = element_blank(), panel.grid.major =element_blank())
     
     
   })
@@ -175,17 +280,22 @@ server <- function(input, output) {
   
   output$cfdaTable <- DT::renderDataTable({
     # edit fancy table 2
-    gra16.4 <- filter(gra16.3 , county %in% input$your_county , assistance_type == "04: Project grant", fed_funding_amount > 0, recip_cat_type == input$recipient) 
+    # gra16.4 <- filter(gra16.3 , county %in% input$your_county , assistance_type == "04: Project grant", fed_funding_amount > 0, recip_cat_type == input$recipient) 
     
-    gra16.5 <- gra16.4[c("county" , "agency_name",  "recipient_name", "recip_cat_type", "cfda_program_title", "fed_funding_amount")]
+    #gra16.5 <- gra16.4[c("county" , "agency_name",  "recipient_name", "recip_cat_type", "cfda_program_title", "fed_funding_amount")]
     
-    colnames(gra16.5) <- c("County", "Agency", "Recipient", "Recipient Type", "Program Title", "Funding Recieved")
+    # colnames(gra16.5) <- c("County", "Agency", "Recipient", "Recipient Type", "Program Title", "Funding Recieved")
     
-    gra16.5
+    # gra16.5
+    # edit fancy table 2
+    gra16.4 <- filter(gra16.3, county %in% input$your_county
+                      , assistance_type == "04: Project grant"
+                      , fed_funding_amount > 0, recip_cat_type == input$recipient
+                      , maj_agency_cat == input$maj
+    )
+    # call the table
+    gra16.4
   })
   
   
 } # end of server
-
-## call the Shiny App ##
-##shinyApp(ui, server)
