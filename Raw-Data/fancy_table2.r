@@ -10,7 +10,7 @@ library( magrittr )
 library( dplyr )
 
 # Create the data table
-fancy_table <- datatable( gra16.4
+fancy_table2 <- datatable( gra16.4
                          , rownames = FALSE
                          , caption = "FY16 Federal Spending Project Details"
   , colnames = c("County Name", "Total Federal Grant Funding Received"
