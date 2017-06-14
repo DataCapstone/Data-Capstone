@@ -141,9 +141,18 @@ body <- dashboardBody(
                                  solidHeader = TRUE, collapsible = FALSE, width = NULL
                                  , sankeyNetworkOutput( "sankey" ) ) # end of box 2
                 ) # end of column 2
-                
               ) # end of row 2
-              
+             , fluidRow(
+               column( width = 12
+                       , box( title = "Top Recipient Details", status = "primary"
+                              , solidHeader = TRUE, collapsible = FALSE, width = NULL
+                              , infoBoxOutput("top")
+                              , infoBoxOutput("top.dollars")
+                              , infoBoxOutput("top.num")
+                       ) # end of box 3
+               ) # end of column 3
+             ) # end of row 3
+             
     ) # end of second tab
     , # Third tab content
     tabItem(tabName = "County"
@@ -303,6 +312,79 @@ server <- function(input, output) {
     }
     
   })
+  
+  output$top <- renderInfoBox({
+    
+    top.rec <- aggregate(gra16.3$fed_funding_amount, by= list(gra16.3$recipient_name, gra16.3$county), FUN = sum)
+    
+    if (input$county == "NY State") {
+      
+      top.rec.2 <- top.rec
+      top.rec.3 <- arrange(top.rec.2 , desc(x))
+      top <- top.rec.3[1,]$Group.1
+      
+    } else {
+      
+      top.rec.2 <- filter(top.rec , Group.2 == input$county)
+      top.rec.3 <- arrange(top.rec.2 , desc(x))
+      top <- top.rec.3[1,]$Group.1
+      
+    }
+    
+    infoBox(
+      paste0(top), "Top Recipient", icon = icon("users"),
+      color = "aqua"
+    )
+  })
+  
+  output$top.dollars <- renderInfoBox({
+    
+    top.rec <- aggregate(gra16.3$fed_funding_amount, by= list(gra16.3$recipient_name, gra16.3$county), FUN = sum)
+    
+    if (input$county == "NY State") {
+    
+    top.rec.2 <- top.rec
+    top.rec.3 <- arrange(top.rec.2 , desc(x))
+    top.dollars <- top.rec.3[1,]$x
+    
+    } else {
+      
+    top.rec.2 <- filter(top.rec , Group.2 == input$county)
+    top.rec.3 <- arrange(top.rec.2 , desc(x))
+    top.dollars <- top.rec.3[1,]$x
+    
+    }
+    
+    infoBox(
+      paste0("$", prettyNum(top.dollars, big.mark = ",")), "Top Recipient Funding", icon = icon("credit-card"),
+      color = "purple"
+    )
+  })
+  
+  output$top.num <- renderInfoBox({
+    
+    top.rec.num <- aggregate(gra16.3$fed_funding_amount, by= list(gra16.3$recipient_name, gra16.3$county), FUN = length )
+    
+    if (input$county == "NY State") {
+    
+    top.rec.num.2 <- top.rec.num
+    top.rec.num.3 <- arrange(top.rec.num.2 , desc(x))
+    top.num <- top.rec.num.3[1,]$x  
+    
+    } else {
+      
+    top.rec.num.2 <- filter(top.rec.num , Group.2 == input$county)
+    top.rec.num.3 <- arrange(top.rec.num.2 , desc(x))
+    top.num <- top.rec.num.3[1,]$x
+    
+    }
+    
+    infoBox(
+      paste0(top.num), "Top Recipient Number of Transactions", icon = icon("list"),
+      color = "green"
+    )
+  })
+  
   #######################################
   #### County Overview Shiny Elements####
   #######################################
