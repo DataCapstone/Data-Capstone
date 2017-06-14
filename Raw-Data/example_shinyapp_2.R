@@ -171,16 +171,16 @@ body <- dashboardBody(
                              ) ) # end of box 1
               ) # end of column 1
               , column( width = 5
-                        , box( title = "Grant Types by County", status = "primary"
+                        , box( title = "County Demographics", status = "primary"
                                , solidHeader = TRUE, collapse = FALSE, width = NULL
-                               , shiny::plotOutput("percapPlot")
+                               , shiny::plotOutput("censusPlot")
                         ) # end of box 2
               ) # end of column 2
               , column( width = 5
-                        , box( title = "County Demographics"
+                        , box( title = "Grant Types by County"
                                , status = "primary"
                                , solidHeader = TRUE, collapse = FALSE, width = NULL
-                               , shiny::plotOutput("censusPlot")
+                               , shiny::plotOutput("percapPlot")
                         ) # end of box 3
               ) # end of column 3
             ) # end of row 1
