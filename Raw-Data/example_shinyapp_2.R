@@ -111,8 +111,10 @@ body <- dashboardBody(
             # , shiny::p("Under the U.S. Treasury Department’s leadership, the new site will allow taxpayers to examine", span( strong(" nearly $4 trillion in federal spending each year ")), "and see how this money flows from Congressional appropriations to local communities and businesses. The data is compiled by Treasury from federal agencies and published quarterly beginning in May 2017. The data will be updated each quarter.")
             # , shiny::p("Generally, federal spending can be separated between mandatory and discretionary spending. USAspending Explorer examines the discretionary side of federal spending by only look at spending transactions classified as grants. Given the open-source nature of our work, it is entirely possible to explore contracts, loans, and other financial assistance spending types.")
             # , shiny::p("All spending totals exclude grants which were directly award to the state government.")
-            , shiny::p("USA Spending Explorer is an open source tool designed to help the navigation of federal data made publicly available through usaspending.gov. Through dynamic visualizations and search filters, the Explorer can answer the who, what, where, why and how of the complex federal government spending landscape. Get a quick overview of the federal spending structure by State and County, filter by county, agency, recipient type or type of spending. Current version of USA Spending Explorer is using 2016 Grants data only. State grants have been excluded due to limitations of determining the final recipient.")
-            , h2("Total and per capita federal (USD) received by county")
+            , shiny::p("USAspending Explorer is an open source tool designed to assist in the navigation of federal data made publicly available through usaspending.gov. Through dynamic visualizations and search filters, the Explorer can answer the who, what, where, why and how of the complex federal government spending landscape.")
+            , shiny::p("This explorer serves as a tool to understand federal funding at the county level. It focuses on federal assistance in the form of grants and excludes grants that go directly to the state government because of the complexity of determining the final recipient of those funds.") 
+            , shiny::p("With USAspending Explorer, You can understand how tax dollars are spent, explore who receives federal grants in your area, and see what that funding is directed towards. This tool shows total funding going to each county, and how funds are distributed geographically within the state adjusted by population. It also offers flexible comparisons between counties and the state average, displays county demographic information to inform county comparisons, and breaks down county funding by the funding agency, recipient, and program to better understand what is driving variations across counties.")
+            , h3("All Federal Grant Funding Received by County, FY 2016")
             , fluidRow(
               column(width = 4
                      , DT::dataTableOutput("tbl")
@@ -124,8 +126,8 @@ body <- dashboardBody(
     ) # end of Overview tab
     # second tab Explore
     , tabItem( tabName = "Explore"
-            , h2("Federal Grants Flow Diagram: Funding Agencies to Recipient Types in a County") # blank space
-            , em("Grants for New York state, FY16. Negative transactions have been excluded from the aggregation.")
+            , h2("County Explorer") # blank space
+            , shiny::p("This diagram shows the flow of funding from funding agencies to recipients with widths proportional to the amount of funding. For simplicity it displays the top 10 funding agencies in each county and groups all other agencies into an other category.")
             , br()
             , fluidRow(
               column( width = 2
@@ -139,7 +141,7 @@ body <- dashboardBody(
                              ) ) # end of box 1
               ) # end of column 1
               , column( width = 10
-                        , box( title = "Flow of Funds from the Top 10 Agencies in County", status = "primary",
+                        , box( title = "Flow of Funds from the Top 10 Agencies", status = "primary",
                                solidHeader = TRUE, collapsible = FALSE, width = NULL
                                , sankeyNetworkOutput( "sankey" ) ) # end of box 2
               ) # end of column 2
@@ -166,7 +168,10 @@ body <- dashboardBody(
     ) # end of second tab
     , # Third tab content
     tabItem(tabName = "Compare"
-            , h2("Comparing Federal Grant Funding Received Across Counties")
+            , h2("County Comparison of Project Grant Funding")
+            , shiny::p("These visuals build on the same federal grant data for New York state in FY 2016 but focus solely on project grants. Project grants are awarded for a specific purpose and based on the merit of the grant application, meaning that any variation from county to county is at least in part under the applicant’s control. This type of grant may be of more interest to users wishing to understand differences between counties than grants distributed based on a formula determined by law and often based on demographic information or less competitive block grants would be.")
+            , shiny::p("This comparison tool allows you to select up to 4 counties in New York state, view how similar those counties are in terms of demographics and in comparison to the state average, and then view the total federal grant funding received by each county in per capita terms.")
+    
             , fluidRow(
               column( width = 2
                       , box( title = "County Comparison", status = "primary"
@@ -194,9 +199,11 @@ body <- dashboardBody(
                         ) # end of box 3
               ) # end of column 3
             ) # end of row 1
+            , br()
+            , shiny::p("You can then further examine the project grant funding received by each county broken down by the recipient type and federal agency awarding the funds. This allows you to identify what areas or recipients are driving the variation in funds. You can further explore the specific grants and recipients that make up any of this variation in the data table below.")
             , fluidRow(
               column( width = 12
-                      , box( title = "Per Capita Federal Project Grant Funding by County, Agency, and Recipient"
+                      , box( title = "Federal Project Grant Funding by County, Agency, and Recipient (Per Capita)"
                              , status = "primary", solidHeader = TRUE, collapse = FALSE
                              , width = NULL
                              , shiny::plotOutput("smallMultiples", height = 1800)
@@ -490,7 +497,7 @@ server <- function(input, output) {
     county.filter <- filter(agg.pop.percap, County %in% input$your_county)
     
     
-    ggplot(county.filter, aes(x=County, y= percap)) + geom_bar( aes(fill=County), stat="identity")+ scale_y_continuous(position = "right", labels = scales::dollar_format(prefix="$", big.mark = ","))+ facet_grid(Agency ~ Recipient_Type, switch="y") + theme_minimal() + theme (strip.text.y = element_text(size=12, angle = 180), strip.text.x = element_text(size=12), plot.title = element_text(size=16), plot.subtitle = element_text(size=13), legend.position="top", legend.title = element_blank(), axis.title.x=element_blank(), legend.key.size = unit(.5, "line"), legend.text=element_text(size=12),
+    ggplot(county.filter, aes(x=County, y= percap)) + geom_bar( aes(fill=County), stat="identity")+ scale_y_continuous(position = "right", labels = scales::dollar_format(prefix="$", big.mark = ","))+ facet_grid(Agency ~ Recipient_Type, switch="y") + labs(caption = "*This chart excludes negative outlays as well as agencies that had less than 10 entries total across recipient types and counties.") + theme_minimal() + theme (strip.text.y = element_text(size=12, angle = 180), strip.text.x = element_text(size=12), plot.title = element_text(size=16), plot.subtitle = element_text(size=13), legend.position="top", legend.title = element_blank(), axis.title.x=element_blank(), legend.key.size = unit(.5, "line"), legend.text=element_text(size=12),
                                                                                                                                                                                                                                                                                    axis.title.y= element_blank(), axis.ticks=element_blank(), axis.text.x= element_blank(), panel.background = element_rect(colour = 'gray80'),panel.grid.minor = element_blank(), panel.grid.major =element_blank())
     
     
