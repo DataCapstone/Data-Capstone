@@ -197,6 +197,18 @@ body <- dashboardBody(
               column( width = 12
                       , box( title = "Federal Spending Details", status = "primary"
                              , solidHeader = TRUE, collapsible = FALSE, width = NULL
+                             , selectInput(
+                               inputId = 'recipient'
+                               , label='Select a recipient:'
+                               , choices = c( sort(unique(as.character(gra16.3$recip_cat_type))))
+                               , selected = "Higher Ed"
+                             ) # end of radio buttons
+                             , selectInput(
+                               inputId = 'maj'
+                               , label='Select an Agency:'
+                               , choices = c( sort(unique(as.character(gra16.3$maj_agency_cat))))
+                               , selected = "Health And Human Services"
+                             ) # end of radio buttons
                              , DT::dataTableOutput("cfdaTable")
                       ) # end of box 7
               ) # end of column 7
@@ -459,13 +471,21 @@ server <- function(input, output) {
   
   output$cfdaTable <- DT::renderDataTable({
     # edit fancy table 2
-    gra16.4 <- filter(gra16.3 , county %in% input$your_county , assistance_type == "04: Project grant", fed_funding_amount > 0, recip_cat_type == input$recipient) 
+   # gra16.4 <- filter(gra16.3 , county %in% input$your_county , assistance_type == "04: Project grant", fed_funding_amount > 0, recip_cat_type == input$recipient) 
     
-    gra16.5 <- gra16.4[c("county" , "agency_name",  "recipient_name", "recip_cat_type", "cfda_program_title", "fed_funding_amount")]
+    #gra16.5 <- gra16.4[c("county" , "agency_name",  "recipient_name", "recip_cat_type", "cfda_program_title", "fed_funding_amount")]
     
-    colnames(gra16.5) <- c("County", "Agency", "Recipient", "Recipient Type", "Program Title", "Funding Recieved")
+   # colnames(gra16.5) <- c("County", "Agency", "Recipient", "Recipient Type", "Program Title", "Funding Recieved")
     
-    gra16.5
+   # gra16.5
+        # edit fancy table 2
+    gra16.4 <- filter(gra16.3, county %in% input$your_county
+                      , assistance_type == "04: Project grant"
+                      , fed_funding_amount > 0, recip_cat_type == input$recipient
+                      , maj_agency_cat == input$maj
+                      )
+    # call the table
+    gra16.4
   })
   
   
