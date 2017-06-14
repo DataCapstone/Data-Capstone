@@ -1,0 +1,243 @@
+---
+title: "Census comp"
+output: github_document
+html_document:
+  df_print: paged
+  keep_md: true
+  code_fold: hide
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set( message=F, warning=F, fig.width = 10, fig.height = 10 )
+library(dplyr)
+library(pander)
+library(ggplot2)
+
+```
+
+
+```{r, eval=FALSE}
+
+########CREATING A NORMALIZED CENSUS DF#######################
+#dat <- readRDS( gzcon(url("https://github.com/DataCapstone/Data-Capstone/blob/master/Raw-Data/NYcensus.rds?raw=true")))
+
+dat <- arrange(dat, county.name)
+dat$county.name <- as.character(dat$county.name)
+
+#stripping useless columns
+dat <- dat[,c(3,4,5,13)]
+
+#normalizing the data
+x <- dat$Pop
+dat$Pop.n <- (x - mean(x)) / sd(x)
+
+x <- dat$MHincome
+dat$MHincome.n <- (x - mean(x)) / sd(x)
+
+x <- dat$pov.rate
+dat$pov.rate.n <- (x - mean(x)) / sd(x)
+
+#creating a NY average
+y <- data.frame("State Average", sum(dat$Pop)/62, sum(dat$MHincome)/62, sum(dat$pov.rate)/62, 0, 0, 0)
+colnames(y) <- colnames(dat)
+dat <- rbind(dat,y)
+
+dat[,2:3]<- round(dat[,2:3], digits = 0)
+dat[,4]<- round(dat[,4]*100, digits = 1)
+
+#saveRDS(dat, "NYcen_norm.RDS")
+
+```
+
+```{r}
+###########################################
+
+#now that the rds is on git hub we can call it.
+dem <- readRDS( gzcon(url("https://github.com/DataCapstone/Data-Capstone/blob/master/Raw-Data/NYcen_norm.RDS?raw=true")))
+
+#only working with four comparatos and NY state
+#"Matches for Onondaga: 1.Broome, 2.St. Lawrence, 3.Orange, 4.Sullivan, 5.Monroe"
+dat <- dem
+x <- dat$county.name %in% c("Onondaga", "Broome", "St. Lawrence", "Sullivan")
+dat <- dat[x,]
+dat$county.name <- factor(dat$county.name, ordered= TRUE)
+rownames(dat) <- 1:nrow(dat)
+```
+
+#tHE FUNCTION
+
+
+```{r}
+#################### MAKING THE function #######################
+
+#making a df of all the max y min values
+maxxes <- data.frame(val= c("Pop", "MHincome", "Pov.rate"), min = c(min(dem$Pop), min(dem$MHincome), min(dem$pov.rate)), max = c(max(dem$Pop), max(dem$MHincome), max(dem$pov.rate)))
+
+#State Average 317309    55276     13.8
+
+x<- dat
+
+krzycensuz <- function (x)
+{
+  # Load Required Packages
+  require(ggplot2)
+  require(gridExtra)
+  options(scipen = 999)
+  
+  #the function will make three plots, save them into objects and stack them together using gridExtra
+
+  #making the first plot
+  bar.pop <- ggplot(x, aes(fill=county.name, color = county.name)) +
+    geom_vline(xintercept=317309, color = "grey80", size=4, linetype = "solid") +
+    geom_text(aes(x=317309, y="Population         ", label= "NY Average"), size = 3, colour = "grey40", angle = 90) +
+    geom_point(aes(x=x$Pop, y="Population         "), stat="identity", shape = 23, size = 8) +
+    theme_minimal() +
+    xlim(4700,max(x$Pop)+1000) + 
+  theme(legend.position = "none",
+          axis.title = element_blank(),
+          panel.background = element_rect(color = "grey80", fill= NA),
+          panel.border = element_blank(),
+          legend.title = element_blank(),
+          panel.grid = element_blank(),
+          #panel.grid.major.y = element_line(color = "grey80"),
+          #panel.grid.minor.y = element_blank(),
+          panel.grid.major.x = element_line(color = "grey80"))
+          #panel.grid.minor.x = element_line(color = "grey80"))
+  
+  #second plot
+  bar.inc <- ggplot(x, aes(fill=county.name, color = county.name)) +
+    geom_vline(xintercept=55276, color = "grey80", size=4, linetype = "solid") +
+    geom_text(aes(x=55276, y="Median Income*", label= "NY Average"), size = 3, colour = "grey40", angle = 90) +
+    geom_point(aes(x=x$MHincome, y="Median Income*"), stat="identity", shape = 23, size = 8) +
+    theme_minimal() +
+    xlim(34200,max(x$MHincome)+800) +
+   theme(legend.position = "none",
+          axis.title = element_blank(),
+          panel.background = element_rect(color = "grey80", fill= NA),
+          panel.border = element_blank(),
+          legend.title = element_blank(),
+          panel.grid = element_blank(),
+          #panel.grid.major.y = element_line(color = "grey80"),
+          #panel.grid.minor.y = element_blank(),
+          panel.grid.major.x = element_line(color = "grey80"))
+          #panel.grid.minor.x = element_line(color = "grey80"))
+  
+  #third plot
+  bar.pov <- ggplot(x, aes(fill=county.name, color = county.name)) +
+    geom_vline(xintercept=13.8, color = "grey80", size=4, linetype = "solid") +
+    geom_text(aes(x=13.8, y="Poverty Rate (%)", label= "NY Average"), size = 3, colour = "grey40", angle = 90) +
+    geom_point(aes(x=x$pov.rate, y="Poverty Rate (%)"), stat="identity", shape = 23, size = 8) +
+    theme_minimal() +
+    xlim(5,max(x$pov.rate)+1) +
+    theme(legend.position = "none",
+          axis.title = element_blank(),
+          panel.background = element_rect(color = "grey80", fill= NA),
+          panel.border = element_blank(),
+          legend.title = element_blank(),
+          panel.grid = element_blank(),
+          #panel.grid.major.y = element_line(color = "grey80"),
+          #panel.grid.minor.y = element_blank(),
+          panel.grid.major.x = element_line(color = "grey80"))
+          #panel.grid.minor.x = element_line(color = "grey80"))
+    
+  
+  #making a legend with a plot.
+  leg <- ggplot(x, aes(fill=county.name, color = county.name)) +
+  geom_point(aes(x=2:(length(levels(x$county.name))+1), y=""), stat="identity", shape = 23, size = 8) +
+  theme_minimal() +
+  coord_cartesian(xlim = 1:(length(levels(x$county.name))+2)) +
+  geom_text(aes(x=2:(length(levels(x$county.name))+1), y=.7, label = paste0(levels(x$county.name))),
+            size= 4,
+            hjust = .5,
+            vjust = .5,
+            colour = "grey20") +
+  labs(caption = "*Median Income is by Household \n Source: ACS 2015 Census data.") +
+  theme(legend.position = "none",
+          axis.title = element_blank(),
+          axis.text=element_blank(), 
+          axis.ticks=element_blank(),
+          panel.grid=element_blank(),
+          panel.border = element_blank(),
+          legend.title = element_blank())
+  
+  #compiling everything for output
+  bars <- grid.arrange(bar.pop, bar.inc, bar.pov, leg, nrow= 4, ncol=1, heights=c(1,1,1,1), widths=c(1))
+  
+  return(bars)
+}
+
+krzycensuz(x)
+
+
+############################################
+
+```
+
+
+#Display using table
+
+```{r}
+#################### MAKING THE table #######################
+#install.packages("formattable")
+library(formattable)
+
+x <- dat[1:4]
+
+
+
+x$Pop <- accounting(x$Pop, digits = 0)
+x$MHincome <- accounting(x$MHincome, digits = 0)
+x$pov.rate <- percent(x$pov.rate/100, digits = 1)
+colnames(x)<- c("County", "Population", "Income", "Poverty Rate")
+
+formattable(x, 
+            list(County= formatter("span", style = x ~ ifelse(x == "State Average", style(font.weight = "bold"), style(color = "red"))),
+                 Population = color_tile("red", "white"),
+                 Income = color_bar("lightblue"),
+                 "Poverty Rate" = color_bar("lightblue")))
+
+
+
+#################### FUNCTION table #######################
+
+library(formattable)
+
+
+
+colnames(x)<- c("County", "Population", "Income", "Poverty Rate")
+
+x$Pop <- accounting(x$Pop, digits = 0)
+x$MHincome <- accounting(x$MHincome, digits = 0)
+x$pov.rate <- percent(x$pov.rate/100, digits = 1)
+
+formattable(x, 
+            list(County= formatter("span", style = x ~ ifelse(x == "State Average", style(font.weight = "bold"), style(color = "red"))),
+                 Population = color_tile("red", "white"),
+                 Income = color_bar("lightblue"),
+                 "Poverty Rate" = color_bar("lightblue")))
+
+x <- dat
+tablez <- function (x)
+{
+  # Load Required Packages
+  require(formattable)
+  
+  x <- x[, c(1:4)]
+  
+  x$Pop <- accounting(x$Pop, digits = 0)
+  x$MHincome <- accounting(x$MHincome, digits = 0)
+  x$pov.rate <- percent(x$pov.rate/100, digits = 1)
+  colnames(x)<- c("County", "Population", "Income", "Poverty Rate")
+
+  tab <- formattable(x,
+              list(Population = color_tile("steelblue1", "gray90"),
+                   Income = color_tile("steelblue1", "gray90"),
+                   "Poverty Rate" = color_tile("steelblue1", "gray90")))
+  return(tab)
+  }
+  
+
+tablez(x)  
+              
+```
+

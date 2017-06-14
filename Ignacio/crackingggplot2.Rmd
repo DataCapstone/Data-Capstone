@@ -89,3 +89,52 @@ ggplot(df) +
                   xmax=xmax, xmin=xmin), colour=c("white")) +
    coord_polar(theta="y")
 ```
+
+
+#Adding captions to the tiles
+
+
+dat is:
+
+    county.name    Pop MHincome pov.rate Pop.n MHincome.n pov.rate.n
+1        Broome 198093    46261       17  -0.2      -0.69        0.8
+2      Onondaga 468304    55092       15   0.3      -0.01        0.3
+3  St. Lawrence 112011    44705       17  -0.4      -0.81        0.9
+4      Sullivan  76330    50710       17  -0.4      -0.35        0.8
+5 State Average 317309    55276       14   0.0       0.00        0.0
+ 
+```{r}
+#creating my data
+x <- dat
+
+df <- data.frame(x = 1, y = c(1:(nrow(x)*2)), z = sort(rep(1:nrow(x),2)))
+
+df <- data.frame(col = 1, row = c(1:(nrow(x)*2)))
+
+#ggplot likes to recieve dataframes for multiple plotting, otherwise it gets confudes. This is why I constructed this DF with the coordinates of where I want the names!
+names <- data.frame(col = 1, 
+                 row = c(1:nrow(x)*2),
+                 name = toupper(levels(x$county.name))
+                 )
+
+#GEOM TILE
+ggplot(df, aes(x=col, y=row)) +
+  geom_tile(fill= "white", color = "white") +
+  geom_text(data = names, aes(x= col, y=row, label = name),
+            size= 4,
+            hjust = .5,
+            vjust = .5,
+            colour = "grey40") +
+  theme_bw() + 
+  theme(legend.position = "none",
+          axis.title = element_blank(),
+          axis.text=element_blank(), 
+          axis.ticks=element_blank(),
+          panel.grid=element_blank(),
+          panel.border = element_blank(),
+          legend.title = element_blank()
+          )
+
+  
+```
+
