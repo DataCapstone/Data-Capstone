@@ -5,10 +5,7 @@
 #
 
 # Load necessary packages
-# library( Cairo )
-# library( shiny )
-# library( shinydashboard )
-# library(ggthemes)
+library(ggthemes)
 library( shiny )
 library( shinydashboard )
 library( leaflet )
