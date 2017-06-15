@@ -395,7 +395,7 @@ server <- function(input, output) {
     }
     
     infoBox(
-      paste0(top), "Top Recipient", icon = icon("users"),
+      "Top Recipient", paste0(top), icon = icon("users"),
       color = "aqua"
     )
   })
@@ -419,7 +419,7 @@ server <- function(input, output) {
     }
     
     infoBox(
-      paste0("$", prettyNum(top.dollars, big.mark = ",")), "Top Recipient Funding", icon = icon("credit-card"),
+      "Top Recipient Funding", paste0("$", prettyNum(top.dollars, big.mark = ",")), icon = icon("credit-card"),
       color = "purple"
     )
   })
@@ -443,7 +443,7 @@ server <- function(input, output) {
     }
     
     infoBox(
-      paste0(top.num), "Top Recipient Number of Transactions", icon = icon("list"),
+      "Top Recipient Number of Transactions", paste0(top.num), icon = icon("list"),
       color = "green"
     )
   })
